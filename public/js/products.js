@@ -96,7 +96,7 @@ window.ProductsPage = {
 
     openProductForm(product = null) {
         const cats = this.categories.map(c => `<option value="${c.id}" ${product?.category_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('');
-        Modal.open(product ? 'Edit Product' : 'Add Product', `
+        Modal.show(product ? 'Edit Product' : 'Add Product', `
             <form id="prod-form">
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Product Name *</label>

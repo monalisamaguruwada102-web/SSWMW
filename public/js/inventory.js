@@ -56,7 +56,7 @@ window.InventoryPage = {
     },
 
     adjust(id, name, currentQty) {
-        Modal.open(`Adjust Stock — ${name}`, `
+        Modal.show(`Adjust Stock — ${name}`, `
             <div class="form-group">
                 <label class="form-label">Current Quantity: <strong>${currentQty}</strong></label>
                 <label class="form-label" style="margin-top:12px">New Quantity *</label>
@@ -82,7 +82,7 @@ window.InventoryPage = {
     },
 
     async showHistory() {
-        Modal.open('Inventory History', '<div id="hist-loading" style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>', { wide: true });
+        Modal.show('Inventory History', '<div id="hist-loading" style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>', 'large');
         try {
             const { history } = await API.get('/inventory/history', { limit: 50 });
             document.getElementById('hist-loading').outerHTML = `

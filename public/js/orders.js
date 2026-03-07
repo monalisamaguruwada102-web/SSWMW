@@ -62,7 +62,7 @@ window.OrdersPage = {
     },
 
     async viewOrder(id) {
-        Modal.open('Order Details', '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>', { wide: true });
+        Modal.show('Order Details', '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>', 'large');
         try {
             const { order, items } = await API.get(`/orders/${id}`);
             document.getElementById('modal-body').innerHTML = `
@@ -106,7 +106,7 @@ window.OrdersPage = {
                 <button type="button" class="btn-icon" onclick="document.getElementById('ord-item-${i}').remove()" style="color:#ef4444"><svg data-feather="x"></svg></button>
             </div>`;
 
-        Modal.open('New Order / Request', `
+        Modal.show('New Order / Request', `
             <form id="ord-form">
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Order Type *</label>
@@ -126,7 +126,7 @@ window.OrdersPage = {
                     <button type="submit" class="btn btn-primary">Create Order</button>
                 </div>
             </form>
-        `, { wide: true });
+        `, 'large');
         feather.replace();
 
         document.getElementById('add-item-btn').addEventListener('click', () => {

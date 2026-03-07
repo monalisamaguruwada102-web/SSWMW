@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smartstore-v2';
+const CACHE_NAME = 'smartstore-v3';
 const ASSETS = [
     './',
     './index.html',

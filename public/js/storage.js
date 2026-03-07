@@ -49,7 +49,7 @@ window.StoragePage = {
     },
 
     async viewLocation(id) {
-        Modal.open('Location Details', '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>');
+        Modal.show('Location Details', '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>');
         try {
             const { location, items } = await API.get(`/storage/${id}`);
             document.getElementById('modal-body').innerHTML = `
@@ -76,7 +76,7 @@ window.StoragePage = {
             warehouseOptions = '<option value="">Default Warehouse</option>';
         }
 
-        Modal.open(location ? 'Edit Location' : 'Add Storage Location', `
+        Modal.show(location ? 'Edit Location' : 'Add Storage Location', `
             <form id="loc-form">
                 <div class="form-group">
                     <label class="form-label">Warehouse *</label>

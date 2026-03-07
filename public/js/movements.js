@@ -59,7 +59,7 @@ window.MovementsPage = {
         const prodOpts = products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
         const locOpts = '<option value="">Select location...</option>' + locations.map(l => `<option value="${l.id}">${l.section}-${l.rack}-${l.shelf} ${l.description ? '— ' + l.description : ''}</option>`).join('');
 
-        Modal.open('Record Movement', `
+        Modal.show('Record Movement', `
             <form id="mov-form">
                 <div class="form-group"><label class="form-label">Movement Type *</label>
                     <select class="form-select" id="mf-type" required>

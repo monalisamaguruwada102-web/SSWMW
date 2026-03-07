@@ -47,7 +47,7 @@ window.UsersPage = {
     },
 
     openForm(user = null) {
-        Modal.open(user ? 'Edit User' : 'Add User', `
+        Modal.show(user ? 'Edit User' : 'Add User', `
             <form id="user-form">
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Username *</label>
