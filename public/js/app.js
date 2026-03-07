@@ -133,6 +133,11 @@ function showApp(user) {
     const adminSection = document.getElementById('admin-section');
     if (adminSection) adminSection.style.display = user.role === 'admin' ? '' : 'none';
 
+    // Verify Modal is available
+    if (typeof Modal === 'undefined' || typeof Modal.show !== 'function') {
+        console.error('CRITICAL: Modal system failed to initialize or was overwritten.');
+    }
+
     feather.replace();
     initSidebar();
     initModal();

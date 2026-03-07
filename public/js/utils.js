@@ -112,15 +112,27 @@ const fmt = {
 const Modal = {
     show(title, bodyHtml, size = 'medium') {
         const isWide = size === 'large' || size === 'wide';
-        document.getElementById('modal-title').textContent = title;
-        document.getElementById('modal-body').innerHTML = bodyHtml;
-        document.getElementById('modal').className = 'modal' + (isWide ? ' modal-lg' : '');
-        document.getElementById('modal-overlay').classList.remove('hidden');
-        feather.replace();
+        const modalEl = document.getElementById('modal');
+        const titleEl = document.getElementById('modal-title');
+        const bodyEl = document.getElementById('modal-body');
+        const overlayEl = document.getElementById('modal-overlay');
+
+        if (!modalEl || !titleEl || !bodyEl || !overlayEl) {
+            console.error('Modal elements missing from DOM');
+            return;
+        }
+
+        titleEl.textContent = title;
+        bodyEl.innerHTML = bodyHtml;
+        modalEl.className = 'modal' + (isWide ? ' modal-lg' : '');
+        overlayEl.classList.remove('hidden');
+        if (window.feather) feather.replace();
     },
     close() {
-        document.getElementById('modal-overlay').classList.add('hidden');
-        document.getElementById('modal-body').innerHTML = '';
+        const overlayEl = document.getElementById('modal-overlay');
+        const bodyEl = document.getElementById('modal-body');
+        if (overlayEl) overlayEl.classList.add('hidden');
+        if (bodyEl) bodyEl.innerHTML = '';
     },
     confirm(msg, onConfirm) {
         Modal.show('Confirm Action', `
@@ -130,7 +142,8 @@ const Modal = {
                 <button class="btn btn-danger" id="modal-confirm-btn">Confirm</button>
             </div>
         `);
-        document.getElementById('modal-confirm-btn').onclick = () => { Modal.close(); onConfirm(); };
+        const confirmBtn = document.getElementById('modal-confirm-btn');
+        if (confirmBtn) confirmBtn.onclick = () => { Modal.close(); onConfirm(); };
     }
 };
 
@@ -240,6 +253,26 @@ const Utils = {
     formatDateTime(d) { return fmt.datetime(d); }
 };
 
+// ===================== Select Loader =====================
+async function loadSelectOptions(endpoint, selectId, dataKey, optionFormatter, placeholder = '-- Select --') {
+    const el = document.getElementById(selectId);
+    if (!el) return;
+    el.innerHTML = `<option value="">${placeholder}</option>`;
+    try {
+        const data = await API.get(endpoint);
+        const items = data[dataKey] || [];
+        items.forEach(item => {
+            const { value, text } = optionFormatter(item);
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = text;
+            el.appendChild(opt);
+        });
+    } catch (e) {
+        console.error(`Failed to load options for ${selectId}:`, e);
+    }
+}
+
 // Export for use in other modules
 window.API = API;
 window.Toast = Toast;
@@ -249,3 +282,4 @@ window.Utils = Utils;
 window.exportCSV = exportCSV;
 window.exportPDF = exportPDF;
 window.debounce = debounce;
+window.loadSelectOptions = loadSelectOptions;
