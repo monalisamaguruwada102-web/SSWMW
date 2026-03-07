@@ -1,4 +1,4 @@
-const { getAll, runInsert, getOne } = require('./db/database');
+const { getAll, runInsert, getOne } = require('../db/database');
 
 /**
  * SmartProcurement Service
