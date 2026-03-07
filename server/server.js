@@ -37,6 +37,7 @@ app.use('/api/stock-master', require('./routes/stockMaster'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/transfers', require('./routes/transfers'));
+app.use('/api/debug-db', require('./routes/debug'));
 
 // SPA catch-all — serve index.html for all non-API routes
 app.get('*', async (req, res) => {
