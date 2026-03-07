@@ -20,8 +20,7 @@ window.InventoryPage = {
             <div class="table-container">
                 <table>
                     <thead><tr>
-                        <th>Product</th><th>SKU</th><th>Location</th><th>Category</th>
-                        <th>Qty</th><th>Min</th><th>Status</th><th>Level</th><th>Actions</th>
+                        <th>Product</th><th>Warehouse</th><th>Location</th><th>Batch #</th><th>Expiry</th><th>Qty</th><th>Status</th><th>Actions</th>
                     </tr></thead>
                     <tbody id="inv-tbody"></tbody>
                 </table>

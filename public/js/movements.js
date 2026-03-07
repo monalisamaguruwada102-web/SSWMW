@@ -71,8 +71,12 @@ window.MovementsPage = {
                 </div>
                 <div class="form-group"><label class="form-label">Product *</label>
                     <select class="form-select" id="mf-product" required><option value="">Select product...</option>${prodOpts}</select></div>
-                <div class="form-group"><label class="form-label">Quantity *</label>
-                    <input class="form-input" id="mf-qty" type="number" min="1" placeholder="Enter quantity" required></div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Quantity *</label>
+                        <input class="form-input" id="mf-qty" type="number" min="1" placeholder="Enter quantity" required></div>
+                    <div class="form-group"><label class="form-label">Batch # (Optional)</label>
+                        <input class="form-input" id="mf-batch" placeholder="e.g. BT-2024-001"></div>
+                </div>
                 <div class="form-row" id="mf-locations">
                     <div class="form-group" id="mf-from-wrap"><label class="form-label">From Location</label>
                         <select class="form-select" id="mf-from">${locOpts}</select></div>
@@ -110,6 +114,7 @@ window.MovementsPage = {
                 type: document.getElementById('mf-type').value,
                 product_id: parseInt(document.getElementById('mf-product').value),
                 quantity: parseInt(document.getElementById('mf-qty').value),
+                batch_number: document.getElementById('mf-batch').value || null,
                 from_location_id: document.getElementById('mf-from').value || null,
                 to_location_id: document.getElementById('mf-to').value || null,
                 reference_number: document.getElementById('mf-ref').value,

@@ -66,4 +66,17 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     res.json({ message: 'Location deleted' });
 });
 
+// GET /api/storage/heatmap
+router.get('/heatmap', requireAuth, async (req, res) => {
+    // Hits per location in the last 30 days
+    const hits = await getAll(`
+        SELECT location_id, COUNT(*) as hit_count
+        FROM inventory_history
+        WHERE change_type IN ('incoming', 'outgoing', 'transfer_in', 'transfer_out')
+          AND created_at > CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY location_id
+    `);
+    res.json({ hits });
+});
+
 module.exports = router;

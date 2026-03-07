@@ -4,43 +4,67 @@ window.StoragePage = {
             <div class="page-header">
                 <h2>Storage Locations</h2>
                 <div class="page-header-actions">
+                    <button class="btn btn-ghost" id="heatmap-toggle"><i data-feather="thermometer"></i>Heatmap View</button>
                     ${AppState.user?.role === 'admin' ? '<button class="btn btn-primary" id="add-loc-btn"><i data-feather="plus"></i>Add Location</button>' : ''}
                 </div>
             </div>
             <div id="warehouse-map" class="warehouse-grid"></div>`;
         feather.replace();
         this.loadLocations();
+
+        let heatmapActive = false;
+        document.getElementById('heatmap-toggle').addEventListener('click', async (e) => {
+            heatmapActive = !heatmapActive;
+            e.currentTarget.classList.toggle('btn-primary', heatmapActive);
+            e.currentTarget.classList.toggle('btn-ghost', !heatmapActive);
+            this.loadLocations(heatmapActive);
+        });
+
         const addBtn = document.getElementById('add-loc-btn');
         if (addBtn) addBtn.addEventListener('click', () => this.openForm());
     },
 
-    async loadLocations() {
+    async loadLocations(heatmap = false) {
         try {
             const { locations } = await API.get('/storage');
+            let hits = {};
+            if (heatmap) {
+                const data = await API.get('/storage/heatmap');
+                data.hits.forEach(h => hits[h.location_id] = parseInt(h.hit_count));
+            }
+
             const map = document.getElementById('warehouse-map');
             if (!map) return;
 
-            // Color per section
             const sectionColors = { A: '#6366f1', B: '#10b981', C: '#f59e0b', D: '#3b82f6', E: '#8b5cf6' };
+            const maxHits = Math.max(...Object.values(hits), 1);
 
             if (!locations.length) { map.innerHTML = '<p class="text-muted">No storage locations defined</p>'; return; }
             map.innerHTML = locations.map(l => {
-                const color = sectionColors[l.section] || '#6366f1';
+                let color = sectionColors[l.section] || '#6366f1';
+                let heatmapOverlay = '';
+
+                if (heatmap) {
+                    const hitCount = hits[l.id] || 0;
+                    const intensity = hitCount / maxHits;
+                    // Red-to-yellow scale for heatmap
+                    color = `rgba(239, 68, 68, ${0.1 + intensity * 0.9})`;
+                    heatmapOverlay = `<div style="position:absolute;top:5px;right:10px;font-size:10px;font-weight:bold;color:#fff">${hitCount} hits</div>`;
+                }
+
                 const pct = l.capacity > 0 ? Math.round((l.total_items / l.capacity) * 100) : 0;
-                return `<div class="location-tile" style="--loc-color:${color}" onclick="StoragePage.viewLocation(${l.id})">
-                    <div class="location-id">${l.section}-${l.rack}-${l.shelf}</div>
-                    <div class="location-desc">${l.description || 'Storage area'}</div>
-                    <div style="font-size:12px; font-weight:bold; color:var(--primary-color); margin-bottom: 8px;">
+                return `<div class="location-tile" style="--loc-color:${color}; position:relative; ${heatmap ? 'background:var(--loc-color);color:#fff' : ''}" onclick="StoragePage.viewLocation(${l.id})">
+                    ${heatmapOverlay}
+                    <div class="location-id" style="${heatmap ? 'color:#fff' : ''}">${l.section}-${l.rack}-${l.shelf}</div>
+                    <div class="location-desc" style="${heatmap ? 'color:rgba(255,255,255,0.8)' : ''}">${l.description || 'Storage area'}</div>
+                    <div style="font-size:12px; font-weight:bold; color:${heatmap ? '#fff' : 'var(--primary-color)'}; margin-bottom: 8px;">
                         <i data-feather="map-pin" style="width:12px; height:12px;"></i> ${l.warehouse_name || 'Main Warehouse'}
                     </div>
                     <div style="margin-bottom:6px">
-                        <div class="stock-bar" style="width:100%;margin-bottom:3px">
-                            <div class="stock-bar-fill stock-ok" style="width:${pct}%"></div>
+                        <div class="stock-bar" style="width:100%;margin-bottom:3px; background:${heatmap ? 'rgba(255,255,255,0.2)' : ''}">
+                            <div class="stock-bar-fill stock-ok" style="width:${pct}%; ${heatmap ? 'background:#fff' : ''}"></div>
                         </div>
-                        <div class="location-stat"><span>${l.product_count} products</span><span>${pct}%</span></div>
-                    </div>
-                    <div class="location-stat"><span style="color:var(--text-muted)">Capacity: ${l.capacity}</span>
-                        ${AppState.user?.role === 'admin' ? `<button class="btn-link" onclick="event.stopPropagation();StoragePage.editLocation(${l.id})">Edit</button>` : ''}
+                        <div class="location-stat" style="${heatmap ? 'color:#fff' : ''}"><span>${l.product_count} products</span><span>${pct}%</span></div>
                     </div>
                 </div>`;
             }).join('');

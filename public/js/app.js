@@ -16,6 +16,8 @@ const routes = {
     movements: () => window.MovementsPage?.render(),
     storage: () => window.StoragePage?.render(),
     orders: () => window.OrdersPage?.render(),
+    picking: () => window.PickingPage?.render(),
+    analytics: () => window.AnalyticsPage?.render(),
     reports: () => window.ReportsPage?.render(),
     users: () => window.UsersPage?.render(),
     activity: () => window.ActivityPage?.render(),
@@ -39,6 +41,7 @@ function navigate(page) {
         grn: 'GRN (Receiving)', transfers: 'Stock Transfers',
         products: 'Products', inventory: 'Inventory',
         movements: 'Old Movements', storage: 'Storage Locations', orders: 'Dispatch (Orders)',
+        picking: 'Picking & Packing', analytics: 'Advanced Analytics',
         reports: 'Reports', users: 'User Management', activity: 'Activity Log',
     };
     document.getElementById('breadcrumb').textContent = labels[page] || page;

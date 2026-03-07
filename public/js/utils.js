@@ -54,6 +54,9 @@ const fmt = {
         if (!str) return '—';
         return new Date(str).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     },
+    date(str) {
+        return new Date(str).toLocaleDateString();
+    },
     number(n) {
         return Number(n || 0).toLocaleString();
     },

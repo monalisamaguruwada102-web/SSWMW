@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 const { getDb } = require('./db/database');
 const { seedDatabase } = require('./db/seed');
+const SmartProcurement = require('./services/SmartProcurement');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +34,7 @@ app.use('/api/storage', require('./routes/storage'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/grn', require('./routes/grn'));
 app.use('/api/requisitions', require('./routes/requisitions'));
+app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/stock-master', require('./routes/stockMaster'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/notifications', require('./routes/notifications'));
