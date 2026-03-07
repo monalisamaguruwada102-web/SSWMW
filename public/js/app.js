@@ -104,11 +104,11 @@ function startNotifPolling() {
     AppState.notifPollInterval = setInterval(() => window.NotificationsModule?.loadBadge(), 60000);
 }
 
-// ===================== Modal Close =====================
+// ===================== AppModal Close =====================
 function initModal() {
-    document.getElementById('modal-close').addEventListener('click', Modal.close);
+    document.getElementById('modal-close').addEventListener('click', AppModal.close);
     document.getElementById('modal-overlay').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('modal-overlay')) Modal.close();
+        if (e.target === document.getElementById('modal-overlay')) AppModal.close();
     });
 }
 
@@ -144,8 +144,8 @@ function showApp(user) {
     const adminSection = document.getElementById('admin-section');
     if (adminSection) adminSection.style.display = user.role === 'admin' ? '' : 'none';
 
-    // Verify Modal is available
-    if (typeof Modal === 'undefined' || typeof Modal.show !== 'function') {
+    // Verify AppModal is available
+    if (typeof AppModal === 'undefined' || typeof AppModal.show !== 'function') {
         console.error('CRITICAL: Modal system failed to initialize or was overwritten.');
     }
 

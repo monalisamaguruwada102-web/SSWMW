@@ -106,12 +106,12 @@ window.ProcurementPage = {
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Submit Requisition</button>
-                    <button type="button" class="btn btn-secondary" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="AppModal.close()">Cancel</button>
                 </div>
             </form>
         `;
 
-        Modal.show('Raise Purchase Requisition', formHtml);
+        AppModal.show('Raise Purchase Requisition', formHtml);
         feather.replace();
 
         // Add first row
@@ -149,7 +149,7 @@ window.ProcurementPage = {
                 };
                 await API.post('/requisitions', data);
                 Toast.show('Requisition raised successfully', 'success');
-                Modal.close();
+                AppModal.close();
                 this.render();
             } catch (err) {
                 Toast.show(err.message, 'error');
@@ -238,11 +238,11 @@ window.ProcurementPage = {
                     </tfoot>
                 </table>
                 <div style="margin-top: 20px; text-align: right;">
-                    <button class="btn btn-secondary" onclick="Modal.close()">Close</button>
+                    <button class="btn btn-secondary" onclick="AppModal.close()">Close</button>
                 </div>
             `;
 
-            Modal.show(`Requisition Details`, html);
+            AppModal.show(`Requisition Details`, html);
         } catch (e) {
             Toast.show(e.message, 'error');
         }
@@ -282,12 +282,12 @@ window.ProcurementPage = {
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <button type="button" class="btn btn-secondary" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="AppModal.close()">Cancel</button>
                 </div>
             </form>
         `;
 
-        Modal.show('Update Requisition Status', formHtml);
+        AppModal.show('Update Requisition Status', formHtml);
 
         document.getElementById('req-status-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -300,7 +300,7 @@ window.ProcurementPage = {
                     buyer_id: buyerId ? parseInt(buyerId) : null
                 });
                 Toast.show('Status updated successfully', 'success');
-                Modal.close();
+                AppModal.close();
                 this.render();
             } catch (err) {
                 Toast.show(err.message, 'error');

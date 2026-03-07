@@ -45,7 +45,7 @@ window.PickingPage = {
     },
 
     async startPicking(orderId) {
-        Modal.show('Picking List', '<div class="text-center p-4">Loading items...</div>', 'large');
+        AppModal.show('Picking List', '<div class="text-center p-4">Loading items...</div>', 'large');
         try {
             const { order, items } = await API.get(`/orders/${orderId}`);
             const { inventory } = await API.get('/inventory');
@@ -87,7 +87,7 @@ window.PickingPage = {
                         `).join('')}
                     </div>
                     <div class="modal-footer mt-4">
-                        <button class="btn btn-ghost" onclick="Modal.close()">Pause</button>
+                        <button class="btn btn-ghost" onclick="AppModal.close()">Pause</button>
                         <button class="btn btn-success" id="finish-picking" disabled onclick="PickingPage.completePicking(${orderId})">Complete Packing</button>
                     </div>
                 </div>
@@ -124,7 +124,7 @@ window.PickingPage = {
     async completePicking(orderId) {
         try {
             await API.put(`/orders/${orderId}/status`, { status: 'completed' });
-            Modal.close();
+            AppModal.close();
             Toast.success('Order Packed & Dispatched!');
             this.loadOrders();
         } catch (e) { Toast.error(e.message); }

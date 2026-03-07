@@ -137,7 +137,7 @@ window.TransfersPage = {
 
                 <div class="form-actions" style="margin-top: 20px;">
                     <button type="submit" class="btn btn-primary">Initiate Transfer</button>
-                    <button type="button" class="btn btn-secondary" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="AppModal.close()">Cancel</button>
                 </div>
             </form>
         `;
@@ -145,7 +145,7 @@ window.TransfersPage = {
         // Save products for injection
         window._transferProductsOptions = productsOptions;
 
-        Modal.show('New Stock Transfer', formHtml, 'large');
+        AppModal.show('New Stock Transfer', formHtml, 'large');
         feather.replace();
         this.addTransferItemRow();
 
@@ -189,7 +189,7 @@ window.TransfersPage = {
                 };
                 await API.post('/transfers', payload);
                 Toast.show('Stock transfer initiated successfully.', 'success');
-                Modal.close();
+                AppModal.close();
                 this.render();
             } catch (err) {
                 Toast.show(err.message, 'error');
@@ -271,11 +271,11 @@ window.TransfersPage = {
                     </tbody>
                 </table>
                 <div style="margin-top: 20px; text-align: right;">
-                    <button class="btn btn-secondary" onclick="Modal.close()">Close</button>
+                    <button class="btn btn-secondary" onclick="AppModal.close()">Close</button>
                 </div>
             `;
 
-            Modal.show(`Transfer Details`, html, 'large');
+            AppModal.show(`Transfer Details`, html, 'large');
         } catch (e) {
             Toast.show('Failed to fetch transfer details', 'error');
         }
@@ -296,13 +296,13 @@ window.TransfersPage = {
                     </select>
                 </div>
                 <div class="modal-footer" style="padding:0; margin-top:20px;">
-                    <button type="button" class="btn btn-secondary" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="AppModal.close()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Status</button>
                 </div>
             </form>
         `;
 
-        Modal.show('Update Transfer Status', formHtml);
+        AppModal.show('Update Transfer Status', formHtml);
 
         document.getElementById('tf-status-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -311,7 +311,7 @@ window.TransfersPage = {
             try {
                 await API.put(`/transfers/${id}/status`, { status: newStatus });
                 Toast.show('Transfer status updated', 'success');
-                Modal.close();
+                AppModal.close();
                 this.render();
             } catch (err) {
                 Toast.show(err.message, 'error');

@@ -109,7 +109,7 @@ window.ProductsPage = {
 
     openProductForm(product = null) {
         const cats = this.categories.map(c => `<option value="${c.id}" ${product?.category_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('');
-        Modal.show(product ? 'Edit Product' : 'Add Product', `
+        AppModal.show(product ? 'Edit Product' : 'Add Product', `
             <form id="prod-form">
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Product Name *</label>
@@ -130,7 +130,7 @@ window.ProductsPage = {
                 <div class="form-group"><label class="form-label">Description</label>
                     <textarea class="form-textarea" id="pf-desc">${product?.description || ''}</textarea></div>
                 <div class="modal-footer" style="padding:0;margin-top:16px">
-                    <button type="button" class="btn btn-ghost" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-ghost" onclick="AppModal.close()">Cancel</button>
                     <button type="submit" class="btn btn-primary">${product ? 'Save Changes' : 'Add Product'}</button>
                 </div>
             </form>
@@ -148,7 +148,7 @@ window.ProductsPage = {
             try {
                 if (product) await API.put(`/products/${product.id}`, body);
                 else await API.post('/products', body);
-                Modal.close();
+                AppModal.close();
                 Toast.success(product ? 'Product updated!' : 'Product added!');
                 this.loadProducts();
             } catch (err) { Toast.error(err.message); }
@@ -163,7 +163,7 @@ window.ProductsPage = {
     },
 
     deleteProduct(id, name) {
-        Modal.confirm(`Delete product "<strong>${name}</strong>"? This cannot be undone.`, async () => {
+        AppModal.confirm(`Delete product "<strong>${name}</strong>"? This cannot be undone.`, async () => {
             try {
                 await API.delete(`/products/${id}`);
                 Toast.success('Product deleted');

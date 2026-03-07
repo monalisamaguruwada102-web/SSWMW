@@ -59,7 +59,7 @@ window.MovementsPage = {
         const prodOpts = products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
         const locOpts = '<option value="">Select location...</option>' + locations.map(l => `<option value="${l.id}">${l.section}-${l.rack}-${l.shelf} ${l.description ? '— ' + l.description : ''}</option>`).join('');
 
-        Modal.show('Record Movement', `
+        AppModal.show('Record Movement', `
             <form id="mov-form">
                 <div class="form-group"><label class="form-label">Movement Type *</label>
                     <select class="form-select" id="mf-type" required>
@@ -90,7 +90,7 @@ window.MovementsPage = {
                 <div class="form-group"><label class="form-label">Notes</label>
                     <textarea class="form-textarea" id="mf-notes" placeholder="Optional notes..."></textarea></div>
                 <div class="modal-footer" style="padding:0;margin-top:16px">
-                    <button type="button" class="btn btn-ghost" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-ghost" onclick="AppModal.close()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Record Movement</button>
                 </div>
             </form>
@@ -123,7 +123,7 @@ window.MovementsPage = {
             };
             try {
                 await API.post('/movements', body);
-                Modal.close(); Toast.success('Movement recorded!');
+                AppModal.close(); Toast.success('Movement recorded!');
                 this.loadMovements();
             } catch (err) { Toast.error(err.message); }
         });

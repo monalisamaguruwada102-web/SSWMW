@@ -73,7 +73,7 @@ window.StoragePage = {
     },
 
     async viewLocation(id) {
-        Modal.show('Location Details', '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>');
+        AppModal.show('Location Details', '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>');
         try {
             const { location, items } = await API.get(`/storage/${id}`);
             document.getElementById('modal-body').innerHTML = `
@@ -100,7 +100,7 @@ window.StoragePage = {
             warehouseOptions = '<option value="">Default Warehouse</option>';
         }
 
-        Modal.show(location ? 'Edit Location' : 'Add Storage Location', `
+        AppModal.show(location ? 'Edit Location' : 'Add Storage Location', `
             <form id="loc-form">
                 <div class="form-group">
                     <label class="form-label">Warehouse *</label>
@@ -121,7 +121,7 @@ window.StoragePage = {
                 <div class="form-group"><label class="form-label">Capacity</label>
                     <input class="form-input" id="lf-cap" type="number" min="1" value="${location?.capacity || 100}"></div>
                 <div class="modal-footer" style="padding:0;margin-top:16px">
-                    <button type="button" class="btn btn-ghost" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-ghost" onclick="AppModal.close()">Cancel</button>
                     <button type="submit" class="btn btn-primary">${location ? 'Save' : 'Add Location'}</button>
                 </div>
             </form>
@@ -139,7 +139,7 @@ window.StoragePage = {
             try {
                 if (location) await API.put(`/storage/${location.id}`, body);
                 else await API.post('/storage', body);
-                Modal.close(); Toast.success(location ? 'Location updated!' : 'Location added!');
+                AppModal.close(); Toast.success(location ? 'Location updated!' : 'Location added!');
                 this.loadLocations();
             } catch (err) { Toast.error(err.message); }
         });

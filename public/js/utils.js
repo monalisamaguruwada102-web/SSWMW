@@ -108,8 +108,8 @@ const fmt = {
     }
 };
 
-// ===================== Modal Helper =====================
-const Modal = {
+// ===================== AppModal Helper =====================
+const AppModal = {
     show(title, bodyHtml, size = 'medium') {
         const isWide = size === 'large' || size === 'wide';
         const modalEl = document.getElementById('modal');
@@ -135,15 +135,15 @@ const Modal = {
         if (bodyEl) bodyEl.innerHTML = '';
     },
     confirm(msg, onConfirm) {
-        Modal.show('Confirm Action', `
+        AppModal.show('Confirm Action', `
             <p style="color:var(--text-secondary);margin-bottom:20px;">${msg}</p>
             <div class="modal-footer" style="padding:0">
-                <button class="btn btn-ghost" onclick="Modal.close()">Cancel</button>
+                <button class="btn btn-ghost" onclick="AppModal.close()">Cancel</button>
                 <button class="btn btn-danger" id="modal-confirm-btn">Confirm</button>
             </div>
         `);
         const confirmBtn = document.getElementById('modal-confirm-btn');
-        if (confirmBtn) confirmBtn.onclick = () => { Modal.close(); onConfirm(); };
+        if (confirmBtn) confirmBtn.onclick = () => { AppModal.close(); onConfirm(); };
     }
 };
 
@@ -152,13 +152,17 @@ const Scanner = {
     _instance: null,
 
     show(onScan) {
-        Modal.show('Scan Barcode / QR Code', `
+        AppModal.show('Scan Barcode / QR Code', `
             <div id="reader" style="width: 100%; min-height: 300px; background: #000; border-radius: 8px; overflow: hidden;"></div>
             <div class="modal-footer" style="padding:0; margin-top:16px;">
                 <button class="btn btn-ghost" id="scan-stop">Close</button>
             </div>
         `);
 
+        if (typeof Html5Qrcode === 'undefined') {
+            Toast.error('Scanner library failed to load.');
+            return;
+        }
         this._instance = new Html5Qrcode("reader");
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
@@ -167,19 +171,19 @@ const Scanner = {
             config,
             (decodedText) => {
                 this.stop();
-                Modal.close();
+                AppModal.close();
                 onScan(decodedText);
             },
             (errorMessage) => { /* ignore framing errors */ }
         ).catch(err => {
             console.error('Scanner error:', err);
             Toast.error('Could not start camera. Check permissions.');
-            Modal.close();
+            AppModal.close();
         });
 
         document.getElementById('scan-stop').onclick = () => {
             this.stop();
-            Modal.close();
+            AppModal.close();
         };
     },
 
@@ -210,9 +214,9 @@ function exportCSV(data, filename = 'export.csv') {
     Toast.success('CSV exported!');
 }
 
-// ===================== PDF Export =====================
 function exportPDF(data, filename = 'report.pdf', title = 'Report') {
     if (!data || !data.length) { Toast.warning('No data to export'); return; }
+    if (!window.jspdf) { Toast.error('PDF library failed to load.'); return; }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape' });
     doc.setFontSize(16);
@@ -277,7 +281,8 @@ async function loadSelectOptions(endpoint, selectId, dataKey, optionFormatter, p
 window.API = API;
 window.Toast = Toast;
 window.fmt = fmt;
-window.Modal = Modal;
+window.AppModal = AppModal;
+window.Modal = AppModal; // Legacy mapping
 window.Utils = Utils;
 window.exportCSV = exportCSV;
 window.exportPDF = exportPDF;

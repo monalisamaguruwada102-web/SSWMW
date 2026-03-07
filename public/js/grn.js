@@ -140,7 +140,7 @@ window.GrnPage = {
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Save & Confirm Receipt</button>
-                    <button type="button" class="btn btn-secondary" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-secondary" onclick="AppModal.close()">Cancel</button>
                 </div>
             </form>
         `;
@@ -148,7 +148,7 @@ window.GrnPage = {
         // Store options globally for row injection
         window._grnProductsOptions = productsOptions;
 
-        Modal.show('Receive Goods (GRN)', formHtml, 'large');
+        AppModal.show('Receive Goods (GRN)', formHtml, 'large');
         feather.replace();
         this.addGrnItemRow();
 
@@ -189,7 +189,7 @@ window.GrnPage = {
             try {
                 await API.post('/grn', payload);
                 Toast.show('Goods received successfully. Inventory dynamically updated.', 'success');
-                Modal.close();
+                AppModal.close();
                 this.render();
             } catch (err) {
                 Toast.show(err.message, 'error');
@@ -347,11 +347,11 @@ window.GrnPage = {
                     </tbody>
                 </table>
                 <div style="margin-top: 20px; text-align: right;">
-                    <button class="btn btn-secondary" onclick="Modal.close()">Close</button>
+                    <button class="btn btn-secondary" onclick="AppModal.close()">Close</button>
                 </div>
             `;
 
-            Modal.show(`GRN Details`, html, 'large');
+            AppModal.show(`GRN Details`, html, 'large');
         } catch (e) {
             Toast.show('Failed to fetch GRN details', 'error');
         }

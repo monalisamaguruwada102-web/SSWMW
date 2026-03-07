@@ -62,7 +62,7 @@ window.OrdersPage = {
     },
 
     async viewOrder(id) {
-        Modal.show('Order Details', '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>', 'large');
+        AppModal.show('Order Details', '<div style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>', 'large');
         try {
             const { order, items } = await API.get(`/orders/${id}`);
             document.getElementById('modal-body').innerHTML = `
@@ -83,7 +83,7 @@ window.OrdersPage = {
 
     async updateStatus(id, status) {
         const labels = { approved: 'approve', cancelled: 'cancel', processing: 'mark as processing', completed: 'mark as completed' };
-        Modal.confirm(`Are you sure you want to ${labels[status] || status} this order?`, async () => {
+        AppModal.confirm(`Are you sure you want to ${labels[status] || status} this order?`, async () => {
             try {
                 await API.put(`/orders/${id}/status`, { status });
                 Toast.success(`Order ${status}`);
@@ -106,7 +106,7 @@ window.OrdersPage = {
                 <button type="button" class="btn-icon" onclick="document.getElementById('ord-item-${i}').remove()" style="color:#ef4444"><svg data-feather="x"></svg></button>
             </div>`;
 
-        Modal.show('New Order / Request', `
+        AppModal.show('New Order / Request', `
             <form id="ord-form">
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Order Type *</label>
@@ -122,7 +122,7 @@ window.OrdersPage = {
                 <div id="ord-items-list">${renderItem(1)}</div>
                 <button type="button" class="btn btn-ghost btn-sm" id="add-item-btn" style="margin:8px 0"><i data-feather="plus"></i>Add Item</button>
                 <div class="modal-footer" style="padding:0;margin-top:16px">
-                    <button type="button" class="btn btn-ghost" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-ghost" onclick="AppModal.close()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Order</button>
                 </div>
             </form>
@@ -149,7 +149,7 @@ window.OrdersPage = {
             if (!items.length) { Toast.error('Add at least one item'); return; }
             try {
                 await API.post('/orders', { type: document.getElementById('of-type').value, notes: document.getElementById('of-notes').value, items });
-                Modal.close(); Toast.success('Order created!');
+                AppModal.close(); Toast.success('Order created!');
                 this.loadOrders();
             } catch (err) { Toast.error(err.message); }
         });

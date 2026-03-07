@@ -83,7 +83,7 @@ window.InventoryPage = {
     },
 
     adjust(id, name, currentQty) {
-        Modal.show(`Adjust Stock — ${name}`, `
+        AppModal.show(`Adjust Stock — ${name}`, `
             <div class="form-group">
                 <label class="form-label">Current Quantity: <strong>${currentQty}</strong></label>
                 <label class="form-label" style="margin-top:12px">New Quantity *</label>
@@ -92,7 +92,7 @@ window.InventoryPage = {
             <div class="form-group"><label class="form-label">Notes</label>
                 <textarea class="form-textarea" id="adj-notes" placeholder="Reason for adjustment..."></textarea></div>
             <div class="modal-footer" style="padding:0;margin-top:16px">
-                <button class="btn btn-ghost" onclick="Modal.close()">Cancel</button>
+                <button class="btn btn-ghost" onclick="AppModal.close()">Cancel</button>
                 <button class="btn btn-primary" id="adj-save">Update Stock</button>
             </div>
         `);
@@ -102,14 +102,14 @@ window.InventoryPage = {
             if (isNaN(qty) || qty < 0) { Toast.error('Enter valid quantity'); return; }
             try {
                 await API.put(`/inventory/${id}`, { quantity: qty, notes });
-                Modal.close(); Toast.success('Stock updated!');
+                AppModal.close(); Toast.success('Stock updated!');
                 this.loadInventory();
             } catch (e) { Toast.error(e.message); }
         });
     },
 
     async showHistory() {
-        Modal.show('Inventory History', '<div id="hist-loading" style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>', 'large');
+        AppModal.show('Inventory History', '<div id="hist-loading" style="text-align:center;padding:20px;color:var(--text-muted)">Loading...</div>', 'large');
         try {
             const { history } = await API.get('/inventory/history', { limit: 50 });
             document.getElementById('hist-loading').outerHTML = `

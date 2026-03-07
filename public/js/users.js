@@ -47,7 +47,7 @@ window.UsersPage = {
     },
 
     openForm(user = null) {
-        Modal.show(user ? 'Edit User' : 'Add User', `
+        AppModal.show(user ? 'Edit User' : 'Add User', `
             <form id="user-form">
                 <div class="form-row">
                     <div class="form-group"><label class="form-label">Username *</label>
@@ -65,7 +65,7 @@ window.UsersPage = {
                         <input class="form-input" id="uf-password" type="password" ${user ? '' : 'required'} placeholder="${user ? 'Enter new password to change' : 'Min 6 characters'}"></div>
                 </div>
                 <div class="modal-footer" style="padding:0;margin-top:16px">
-                    <button type="button" class="btn btn-ghost" onclick="Modal.close()">Cancel</button>
+                    <button type="button" class="btn btn-ghost" onclick="AppModal.close()">Cancel</button>
                     <button type="submit" class="btn btn-primary">${user ? 'Save Changes' : 'Add User'}</button>
                 </div>
             </form>
@@ -83,7 +83,7 @@ window.UsersPage = {
             try {
                 if (user) await API.put(`/users/${user.id}`, body);
                 else await API.post('/users', body);
-                Modal.close(); Toast.success(user ? 'User updated!' : 'User added!');
+                AppModal.close(); Toast.success(user ? 'User updated!' : 'User added!');
                 this.loadUsers();
             } catch (err) { Toast.error(err.message); }
         });
@@ -98,7 +98,7 @@ window.UsersPage = {
     },
 
     deactivateUser(id, name) {
-        Modal.confirm(`Deactivate user "<strong>${name}</strong>"? They will not be able to login.`, async () => {
+        AppModal.confirm(`Deactivate user "<strong>${name}</strong>"? They will not be able to login.`, async () => {
             try {
                 await API.delete(`/users/${id}`);
                 Toast.success('User deactivated');
