@@ -24,12 +24,16 @@ app.use('/api', activityLogger);
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/warehouses', require('./routes/warehouses'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/inventory', require('./routes/inventory'));
 app.use('/api/movements', require('./routes/movements'));
 app.use('/api/storage', require('./routes/storage'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/grn', require('./routes/grn'));
+app.use('/api/requisitions', require('./routes/requisitions'));
+app.use('/api/stock-master', require('./routes/stockMaster'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/notifications', require('./routes/notifications'));
 

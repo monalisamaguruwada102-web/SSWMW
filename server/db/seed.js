@@ -39,19 +39,34 @@ async function seedDatabase() {
             console.log('✅ Default categories added.');
         }
 
+        // Auto-add default Warehouses
+        const whCount = await getOne('SELECT COUNT(*) as count FROM warehouses');
+        if (parseInt(whCount.count) === 0) {
+            console.log('Adding default warehouses...');
+            await runInsert("INSERT INTO warehouses (name, type, location) VALUES ('Main HQ', 'hq', 'Central City')");
+            await runInsert("INSERT INTO warehouses (name, type, location) VALUES ('Site Alpha', 'site', 'North District')");
+            await runInsert("INSERT INTO warehouses (name, type, location) VALUES ('Site Beta', 'site', 'South District')");
+            await runInsert("INSERT INTO warehouses (name, type, location) VALUES ('Transit Hub', 'transit', 'Highway 1')");
+            console.log('✅ Default warehouses added.');
+        }
+
         // Auto-add default Storage Locations
         const locCount = await getOne('SELECT COUNT(*) as count FROM storage_locations');
         if (parseInt(locCount.count) === 0) {
             console.log('Adding default storage locations...');
-            const locations = [
-                ['A', '01', '01', 'Receiving Bay', 500],
-                ['B', '01', '01', 'General Storage', 200],
-                ['C', '01', '01', 'Dispatch Bay', 500]
-            ];
-            for (const l of locations) {
-                await runInsert('INSERT INTO storage_locations (section, rack, shelf, description, capacity) VALUES (?,?,?,?,?)', l);
+            // Link to the first warehouse (Main HQ)
+            const hq = await getOne("SELECT id FROM warehouses WHERE type = 'hq' LIMIT 1");
+            if (hq) {
+                const locations = [
+                    [hq.id, 'A', '01', '01', 'Receiving Bay', 500],
+                    [hq.id, 'B', '01', '01', 'General Storage', 200],
+                    [hq.id, 'C', '01', '01', 'Dispatch Bay', 500]
+                ];
+                for (const l of locations) {
+                    await runInsert('INSERT INTO storage_locations (warehouse_id, section, rack, shelf, description, capacity) VALUES (?,?,?,?,?,?)', l);
+                }
+                console.log('✅ Default storage locations added.');
             }
-            console.log('✅ Default storage locations added.');
         }
 
     } catch (err) {

@@ -21,7 +21,7 @@ router.get('/', requireAuth, async (req, res) => {
         params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (category_id) {
-        sql += ' AND p.category_id = ?';
+        sql += ' AND p.category_id = $1';
         params.push(category_id);
     }
     sql += ' GROUP BY p.id, c.name, c.color ORDER BY p.name';
@@ -54,27 +54,28 @@ router.get('/:id', requireAuth, async (req, res) => {
 
 // POST /api/products
 router.post('/', requireAdmin, async (req, res) => {
-    const { name, sku, category_id, description, unit, min_stock_level } = req.body;
+    const { name, sku, category_id, description, unit, min_stock_level, max_stock_level, reorder_level, danger_level } = req.body;
     if (!name || !sku) return res.status(400).json({ error: 'Name and SKU required' });
-    const existing = await getOne('SELECT id FROM products WHERE sku = ?', [sku]);
+    const existing = await getOne('SELECT id FROM products WHERE sku = $1', [sku]);
     if (existing) return res.status(409).json({ error: 'SKU already exists' });
     const id = await runInsert(
-        'INSERT INTO products (name, sku, category_id, description, unit, min_stock_level) VALUES (?,?,?,?,?,?)',
-        [name, sku, category_id || null, description || '', unit || 'pcs', min_stock_level || 0]
+        'INSERT INTO products (name, sku, category_id, description, unit, min_stock_level, max_stock_level, reorder_level, danger_level) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+        [name, sku, category_id || null, description || '', unit || 'pcs', min_stock_level || 0, max_stock_level || null, reorder_level || null, danger_level || null]
     );
-    res.status(201).json({ product: { id, name, sku, category_id, unit, min_stock_level } });
+    res.status(201).json({ product: { id, name, sku, category_id, unit, min_stock_level, max_stock_level, reorder_level, danger_level } });
 });
 
 // PUT /api/products/:id
 router.put('/:id', requireAdmin, async (req, res) => {
-    const { name, sku, category_id, description, unit, min_stock_level } = req.body;
-    const product = await getOne('SELECT * FROM products WHERE id = ?', [req.params.id]);
+    const { name, sku, category_id, description, unit, min_stock_level, max_stock_level, reorder_level, danger_level } = req.body;
+    const product = await getOne('SELECT * FROM products WHERE id = $1', [req.params.id]);
     if (!product) return res.status(404).json({ error: 'Product not found' });
     await runQuery(
-        'UPDATE products SET name=?, sku=?, category_id=?, description=?, unit=?, min_stock_level=?, updated_at=datetime(\'now\') WHERE id=?',
+        'UPDATE products SET name=$1, sku=$2, category_id=$3, description=$4, unit=$5, min_stock_level=$6, max_stock_level=$7, reorder_level=$8, danger_level=$9, updated_at=CURRENT_TIMESTAMP WHERE id=$10',
         [name || product.name, sku || product.sku, category_id ?? product.category_id,
         description ?? product.description, unit || product.unit,
-        min_stock_level ?? product.min_stock_level, req.params.id]
+        min_stock_level ?? product.min_stock_level, max_stock_level ?? product.max_stock_level,
+        reorder_level ?? product.reorder_level, danger_level ?? product.danger_level, req.params.id]
     );
     res.json({ message: 'Product updated' });
 });

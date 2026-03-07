@@ -84,6 +84,15 @@ async function createSchema() {
         last_login TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS warehouses (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        type VARCHAR(50) NOT NULL DEFAULT 'site' CHECK(type IN ('hq','site','transit')),
+        location TEXT,
+        manager_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) UNIQUE NOT NULL,
@@ -100,6 +109,9 @@ async function createSchema() {
         description TEXT,
         unit VARCHAR(50) NOT NULL DEFAULT 'pcs',
         min_stock_level INTEGER NOT NULL DEFAULT 0,
+        max_stock_level INTEGER,
+        reorder_level INTEGER,
+        danger_level INTEGER,
         image_url TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -107,13 +119,14 @@ async function createSchema() {
 
     CREATE TABLE IF NOT EXISTS storage_locations (
         id SERIAL PRIMARY KEY,
+        warehouse_id INTEGER NOT NULL REFERENCES warehouses(id) ON DELETE CASCADE,
         section VARCHAR(50) NOT NULL,
         rack VARCHAR(50) NOT NULL,
         shelf VARCHAR(50) NOT NULL,
         description TEXT,
         capacity INTEGER DEFAULT 100,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(section, rack, shelf)
+        UNIQUE(warehouse_id, section, rack, shelf)
     );
 
     CREATE TABLE IF NOT EXISTS inventory (
@@ -171,6 +184,47 @@ async function createSchema() {
         quantity_requested INTEGER NOT NULL,
         quantity_fulfilled INTEGER DEFAULT 0,
         notes TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS requisitions (
+        id SERIAL PRIMARY KEY,
+        req_number VARCHAR(100) UNIQUE NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','rfq','approved','po_issued','paid','closed','cancelled')),
+        notes TEXT,
+        raised_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        buyer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS requisition_items (
+        id SERIAL PRIMARY KEY,
+        req_id INTEGER NOT NULL REFERENCES requisitions(id) ON DELETE CASCADE,
+        description TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        uom VARCHAR(50) NOT NULL,
+        estimated_cost DECIMAL(10, 2),
+        product_id INTEGER REFERENCES products(id) ON DELETE SET NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS grn (
+        id SERIAL PRIMARY KEY,
+        grn_number VARCHAR(100) UNIQUE NOT NULL,
+        order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+        supplier_name VARCHAR(255),
+        reference_number VARCHAR(255),
+        notes TEXT,
+        received_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS grn_items (
+        id SERIAL PRIMARY KEY,
+        grn_id INTEGER NOT NULL REFERENCES grn(id) ON DELETE CASCADE,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        quantity_ordered INTEGER NOT NULL,
+        quantity_received INTEGER NOT NULL,
+        condition VARCHAR(100) DEFAULT 'Good'
     );
 
     CREATE TABLE IF NOT EXISTS notifications (
