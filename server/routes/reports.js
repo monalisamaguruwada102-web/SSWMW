@@ -5,8 +5,8 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
 // GET /api/reports/inventory
-router.get('/inventory', requireAuth, (req, res) => {
-    const data = getAll(`
+router.get('/inventory', requireAuth, async (req, res) => {
+    const data = await getAll(`
         SELECT p.name, p.sku, p.unit, p.min_stock_level,
                c.name as category,
                sl.section, sl.rack, sl.shelf,
@@ -25,7 +25,7 @@ router.get('/inventory', requireAuth, (req, res) => {
 });
 
 // GET /api/reports/movements
-router.get('/movements', requireAuth, (req, res) => {
+router.get('/movements', requireAuth, async (req, res) => {
     const { from, to } = req.query;
     let sql = `
         SELECT m.type, m.quantity, m.reference_number, m.supplier_or_customer, m.notes, m.created_at,
@@ -44,12 +44,12 @@ router.get('/movements', requireAuth, (req, res) => {
     if (from) { sql += ' AND m.created_at >= ?'; params.push(from); }
     if (to) { sql += ' AND m.created_at <= ?'; params.push(to + ' 23:59:59'); }
     sql += ' ORDER BY m.created_at DESC';
-    res.json({ data: getAll(sql, params) });
+    res.json({ data: await getAll(sql, params) });
 });
 
 // GET /api/reports/low-stock
-router.get('/low-stock', requireAuth, (req, res) => {
-    const data = getAll(`
+router.get('/low-stock', requireAuth, async (req, res) => {
+    const data = await getAll(`
         SELECT p.name, p.sku, p.unit, p.min_stock_level,
                c.name as category,
                COALESCE(SUM(i.quantity), 0) as total_stock,
@@ -65,7 +65,7 @@ router.get('/low-stock', requireAuth, (req, res) => {
 });
 
 // GET /api/reports/activity
-router.get('/activity', requireAuth, (req, res) => {
+router.get('/activity', requireAuth, async (req, res) => {
     const { from, to, limit = 100 } = req.query;
     let sql = `
         SELECT al.*, u.username
@@ -78,34 +78,34 @@ router.get('/activity', requireAuth, (req, res) => {
     if (to) { sql += ' AND al.created_at <= ?'; params.push(to + ' 23:59:59'); }
     sql += ' ORDER BY al.created_at DESC LIMIT ?';
     params.push(parseInt(limit));
-    res.json({ data: getAll(sql, params) });
+    res.json({ data: await getAll(sql, params) });
 });
 
 // GET /api/reports/dashboard-stats
-router.get('/dashboard-stats', requireAuth, (req, res) => {
-    const totalProducts = getOne('SELECT COUNT(*) as count FROM products');
-    const totalStock = getOne('SELECT COALESCE(SUM(quantity), 0) as sum FROM inventory');
-    const lowStockCount = getOne(`
+router.get('/dashboard-stats', requireAuth, async (req, res) => {
+    const totalProducts = await getOne('SELECT COUNT(*) as count FROM products');
+    const totalStock = await getOne('SELECT COALESCE(SUM(quantity), 0) as sum FROM inventory');
+    const lowStockCount = await getOne(`
         SELECT COUNT(*) as count FROM (
             SELECT p.id FROM products p
             LEFT JOIN inventory i ON p.id = i.product_id
             GROUP BY p.id HAVING COALESCE(SUM(i.quantity), 0) <= p.min_stock_level
         )
     `);
-    const pendingOrders = getOne('SELECT COUNT(*) as count FROM orders WHERE status = \'pending\'');
-    const recentMovements = getAll(`
+    const pendingOrders = await getOne('SELECT COUNT(*) as count FROM orders WHERE status = \'pending\'');
+    const recentMovements = await getAll(`
         SELECT m.type, m.quantity, m.created_at, p.name as product_name
         FROM movements m JOIN products p ON m.product_id = p.id
         ORDER BY m.created_at DESC LIMIT 10
     `);
-    const stockByCategory = getAll(`
+    const stockByCategory = await getAll(`
         SELECT c.name, c.color, COALESCE(SUM(i.quantity), 0) as total
         FROM categories c
         LEFT JOIN products p ON c.id = p.category_id
         LEFT JOIN inventory i ON p.id = i.product_id
         GROUP BY c.id ORDER BY total DESC
     `);
-    const movementTrend = getAll(`
+    const movementTrend = await getAll(`
         SELECT DATE(created_at) as date,
                SUM(CASE WHEN type='incoming' THEN quantity ELSE 0 END) as incoming,
                SUM(CASE WHEN type='outgoing' THEN quantity ELSE 0 END) as outgoing

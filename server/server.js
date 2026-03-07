@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('express-async-errors');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
@@ -33,12 +34,18 @@ app.use('/api/reports', require('./routes/reports'));
 app.use('/api/notifications', require('./routes/notifications'));
 
 // SPA catch-all — serve index.html for all non-API routes
-app.get('*', (req, res) => {
+app.get('*', async (req, res) => {
     if (!req.path.startsWith('/api')) {
         res.sendFile(path.join(__dirname, '../public/index.html'));
     } else {
-        res.status(404).json({ error: 'Not found' });
+        res.status(404).json({ error: 'Endpoint not found' });
     }
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('API Error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
 // Initialize database on startup

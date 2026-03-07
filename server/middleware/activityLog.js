@@ -7,7 +7,7 @@ function activityLogger(req, res, next) {
     }
 
     const originalJson = res.json.bind(res);
-    res.json = function (body) {
+    res.json = async function (body) {
         // Only log on success
         if (res.statusCode < 400 && req.user) {
             try {
@@ -18,7 +18,7 @@ function activityLogger(req, res, next) {
                     : method === 'PUT' || method === 'PATCH' ? 'UPDATE'
                         : 'DELETE';
 
-                runInsert(
+                await runInsert(
                     'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, details, ip_address) VALUES (?,?,?,?,?,?)',
                     [
                         req.user.id,

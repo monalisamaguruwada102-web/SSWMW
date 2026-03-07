@@ -12,7 +12,7 @@ function generateOrderNumber() {
 }
 
 // GET /api/orders
-router.get('/', requireAuth, (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
     const { status, type } = req.query;
     let sql = `
         SELECT o.*,
@@ -29,12 +29,12 @@ router.get('/', requireAuth, (req, res) => {
     if (status) { sql += ' AND o.status = ?'; params.push(status); }
     if (type) { sql += ' AND o.type = ?'; params.push(type); }
     sql += ' GROUP BY o.id ORDER BY o.created_at DESC';
-    res.json({ orders: getAll(sql, params) });
+    res.json({ orders: await getAll(sql, params) });
 });
 
 // GET /api/orders/:id
-router.get('/:id', requireAuth, (req, res) => {
-    const order = getOne(`
+router.get('/:id', requireAuth, async (req, res) => {
+    const order = await getOne(`
         SELECT o.*, u1.username as created_by_name, u2.username as approved_by_name
         FROM orders o
         LEFT JOIN users u1 ON o.created_by = u1.id
@@ -42,7 +42,7 @@ router.get('/:id', requireAuth, (req, res) => {
         WHERE o.id = ?
     `, [req.params.id]);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    const items = getAll(`
+    const items = await getAll(`
         SELECT oi.*, p.name as product_name, p.sku, p.unit
         FROM order_items oi
         JOIN products p ON oi.product_id = p.id
@@ -52,32 +52,32 @@ router.get('/:id', requireAuth, (req, res) => {
 });
 
 // POST /api/orders
-router.post('/', requireAuth, (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
     const { type, notes, items } = req.body;
     if (!type || !items || !items.length) {
         return res.status(400).json({ error: 'Type and at least one item required' });
     }
     const orderNumber = generateOrderNumber();
-    const orderId = runInsert(
+    const orderId = await runInsert(
         'INSERT INTO orders (order_number, type, notes, created_by) VALUES (?,?,?,?)',
         [orderNumber, type, notes || '', req.user.id]
     );
     for (const item of items) {
-        runInsert('INSERT INTO order_items (order_id, product_id, quantity_requested, notes) VALUES (?,?,?,?)',
+        await runInsert('INSERT INTO order_items (order_id, product_id, quantity_requested, notes) VALUES (?,?,?,?)',
             [orderId, item.product_id, item.quantity, item.notes || '']);
     }
     res.status(201).json({ id: orderId, order_number: orderNumber });
 });
 
 // PUT /api/orders/:id/status
-router.put('/:id/status', requireAuth, (req, res) => {
+router.put('/:id/status', requireAuth, async (req, res) => {
     const { status } = req.body;
     const validStatuses = ['pending', 'approved', 'processing', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: 'Invalid status' });
     }
 
-    const order = getOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+    const order = await getOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
     // Only admin can approve
@@ -94,7 +94,7 @@ router.put('/:id/status', requireAuth, (req, res) => {
     }
 
     params.push(req.params.id);
-    runQuery(`UPDATE orders SET ${updates.join(', ')} WHERE id = ?`, params);
+    await runQuery(`UPDATE orders SET ${updates.join(', ')} WHERE id = ?`, params);
     res.json({ message: `Order ${status}` });
 });
 
