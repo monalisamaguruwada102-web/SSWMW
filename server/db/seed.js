@@ -4,8 +4,9 @@ const { getAll, runInsert, getOne } = require('./database');
 async function seedDatabase() {
     try {
         console.log('🔄 Checking for legacy default accounts...');
-        // Remove old style usernames to restrict them as requested
-        await runInsert("DELETE FROM users WHERE username IN ('admin', 'staff') AND email NOT LIKE '%@sswms.com'");
+        // Force delete old style usernames to restrict them as requested
+        const { runQuery } = require('./database');
+        await runQuery("DELETE FROM users WHERE username IN ('admin', 'staff') AND email NOT LIKE '%@sswms.com'");
 
         const adminEmail = 'admin@sswms.com';
         const staffEmail = 'staff@sswms.com';
