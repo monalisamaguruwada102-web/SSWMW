@@ -10,6 +10,10 @@ window.InventoryPage = {
                         <option value="low">Low Stock</option>
                         <option value="out">Out of Stock</option>
                     </select>
+                    <div class="search-wrap" style="height: 38px;"><i data-feather="search" class="input-icon"></i>
+                        <input type="text" class="search-input" id="inv-sku-search" placeholder="SKU Search...">
+                        <button class="btn-icon" id="inv-scan-btn" title="Scan Barcode" style="margin-left: 8px;"><i data-feather="maximize"></i></button>
+                    </div>
                     <button class="btn btn-ghost" id="inv-history-btn"><i data-feather="clock"></i>History</button>
                 </div>
             </div>
@@ -27,11 +31,26 @@ window.InventoryPage = {
         this.loadInventory();
         document.getElementById('inv-status').addEventListener('change', e => this.loadInventory(e.target.value));
         document.getElementById('inv-history-btn').addEventListener('click', () => this.showHistory());
+
+        const skuSearch = document.getElementById('inv-sku-search');
+        if (skuSearch) skuSearch.addEventListener('input', debounce(e => this.loadInventory(document.getElementById('inv-status').value, e.target.value)));
+
+        const scanBtn = document.getElementById('inv-scan-btn');
+        if (scanBtn) scanBtn.addEventListener('click', () => {
+            Scanner.show((sku) => {
+                if (skuSearch) {
+                    skuSearch.value = sku;
+                    this.loadInventory(document.getElementById('inv-status').value, sku);
+                }
+            });
+        });
     },
 
-    async loadInventory(status = '') {
+    async loadInventory(status = '', sku = '') {
         try {
-            const params = {}; if (status) params.status = status;
+            const params = {};
+            if (status) params.status = status;
+            if (sku) params.sku = sku;
             const { inventory } = await API.get('/inventory', params);
             const tbody = document.getElementById('inv-tbody');
             if (!tbody) return;

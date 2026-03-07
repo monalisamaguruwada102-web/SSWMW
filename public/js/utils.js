@@ -131,6 +131,49 @@ const Modal = {
     }
 };
 
+// ===================== Scanner Utility =====================
+const Scanner = {
+    _instance: null,
+
+    show(onScan) {
+        Modal.show('Scan Barcode / QR Code', `
+            <div id="reader" style="width: 100%; min-height: 300px; background: #000; border-radius: 8px; overflow: hidden;"></div>
+            <div class="modal-footer" style="padding:0; margin-top:16px;">
+                <button class="btn btn-ghost" id="scan-stop">Close</button>
+            </div>
+        `);
+
+        this._instance = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        this._instance.start(
+            { facingMode: "environment" },
+            config,
+            (decodedText) => {
+                this.stop();
+                Modal.close();
+                onScan(decodedText);
+            },
+            (errorMessage) => { /* ignore framing errors */ }
+        ).catch(err => {
+            console.error('Scanner error:', err);
+            Toast.error('Could not start camera. Check permissions.');
+            Modal.close();
+        });
+
+        document.getElementById('scan-stop').onclick = () => {
+            this.stop();
+            Modal.close();
+        };
+    },
+
+    stop() {
+        if (this._instance && this._instance.isScanning) {
+            this._instance.stop().catch(e => console.error(e));
+        }
+    }
+};
+
 // ===================== Debounce =====================
 function debounce(fn, delay = 300) {
     let t;

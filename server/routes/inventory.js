@@ -6,9 +6,9 @@ const router = express.Router();
 
 // GET /api/inventory
 router.get('/', requireAuth, async (req, res) => {
-    const { category_id, location_id, status } = req.query;
+    const { category_id, location_id, status, sku } = req.query;
     let sql = `
-        SELECT i.*, p.name as product_name, p.sku, p.unit, p.min_stock_level,
+        SELECT i.*, p.name as product_name, p.sku, p.unit, p.min_stock_level, p.danger_level,
                c.name as category_name, c.color as category_color,
                sl.section, sl.rack, sl.shelf
         FROM inventory i
@@ -19,17 +19,23 @@ router.get('/', requireAuth, async (req, res) => {
     `;
     const params = [];
     if (category_id) {
-        sql += ` AND p.category_id = $${params.length + 1}`;
         params.push(category_id);
+        sql += ` AND p.category_id = $${params.length}`;
     }
     if (location_id) {
-        sql += ` AND i.location_id = $${params.length + 1}`;
         params.push(location_id);
+        sql += ` AND i.location_id = $${params.length}`;
     }
+    if (sku) {
+        params.push(sku);
+        sql += ` AND p.sku = $${params.length}`;
+    }
+
     if (status === 'low') sql += ' AND i.quantity > 0 AND i.quantity <= p.min_stock_level';
     else if (status === 'out') sql += ' AND i.quantity = 0';
     else if (status === 'ok') sql += ' AND i.quantity > p.min_stock_level';
-    sql += ' ORDER BY p.name';
+
+    sql += ' ORDER BY i.expiry_date ASC NULLS LAST, p.name ASC';
     res.json({ inventory: await getAll(sql, params) });
 });
 
@@ -105,11 +111,27 @@ router.put('/:id', requireAuth, async (req, res) => {
 
 // POST /api/inventory — add new inventory record
 router.post('/', requireAuth, async (req, res) => {
-    const { product_id, location_id, quantity } = req.body;
+    const { product_id, location_id, quantity, batch_number, expiry_date } = req.body;
     if (!product_id || !location_id) return res.status(400).json({ error: 'Product and location required' });
-    const existing = await getOne('SELECT id FROM inventory WHERE product_id = $1 AND location_id = $2', [product_id, location_id]);
-    if (existing) return res.status(409).json({ error: 'Inventory record already exists for this product/location' });
-    const id = await runInsert('INSERT INTO inventory (product_id, location_id, quantity) VALUES ($1,$2,$3)', [product_id, location_id, quantity || 0]);
+
+    // Check for existing product/location/batch combination
+    let existingSql = 'SELECT id FROM inventory WHERE product_id = $1 AND location_id = $2';
+    const existingParams = [product_id, location_id];
+
+    if (batch_number) {
+        existingSql += ' AND batch_number = $3';
+        existingParams.push(batch_number);
+    } else {
+        existingSql += ' AND batch_number IS NULL';
+    }
+
+    const existing = await getOne(existingSql, existingParams);
+    if (existing) return res.status(409).json({ error: 'Inventory record already exists for this product/location/batch' });
+
+    const id = await runInsert(
+        'INSERT INTO inventory (product_id, location_id, quantity, batch_number, expiry_date) VALUES ($1,$2,$3,$4,$5)',
+        [product_id, location_id, quantity || 0, batch_number || null, expiry_date || null]
+    );
     res.status(201).json({ id });
 });
 

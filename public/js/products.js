@@ -8,6 +8,7 @@ window.ProductsPage = {
                 <div class="page-header-actions">
                     <div class="search-wrap"><i data-feather="search" class="input-icon"></i>
                         <input type="text" class="search-input" id="prod-search" placeholder="Search products...">
+                        <button class="btn-icon" id="prod-scan-btn" title="Scan Barcode" style="margin-left: 8px;"><i data-feather="maximize"></i></button>
                     </div>
                     <select class="form-select" id="prod-cat-filter" style="width:150px">
                         <option value="">All Categories</option>
@@ -92,6 +93,18 @@ window.ProductsPage = {
         });
         const addBtn = document.getElementById('add-prod-btn');
         if (addBtn) addBtn.addEventListener('click', () => this.openProductForm());
+
+        const scanBtn = document.getElementById('prod-scan-btn');
+        if (scanBtn) scanBtn.addEventListener('click', () => {
+            Scanner.show((sku) => {
+                const input = document.getElementById('prod-search');
+                if (input) {
+                    input.value = sku;
+                    this.search = sku;
+                    this.loadProducts();
+                }
+            });
+        });
     },
 
     openProductForm(product = null) {

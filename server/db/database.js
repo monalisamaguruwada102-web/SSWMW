@@ -100,6 +100,14 @@ async function createSchema() {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS suppliers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        contact_email VARCHAR(255),
+        lead_time_days INTEGER DEFAULT 7,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -111,6 +119,7 @@ async function createSchema() {
         max_stock_level INTEGER,
         reorder_level INTEGER,
         danger_level INTEGER,
+        default_supplier_id INTEGER REFERENCES suppliers(id) ON DELETE SET NULL,
         image_url TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -133,8 +142,10 @@ async function createSchema() {
         product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
         location_id INTEGER NOT NULL REFERENCES storage_locations(id) ON DELETE CASCADE,
         quantity INTEGER NOT NULL DEFAULT 0,
+        batch_number VARCHAR(100),
+        expiry_date DATE,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(product_id, location_id)
+        UNIQUE(product_id, location_id, batch_number)
     );
 
     CREATE TABLE IF NOT EXISTS inventory_history (
@@ -276,7 +287,12 @@ async function createSchema() {
         'ALTER TABLE products ADD COLUMN IF NOT EXISTS max_stock_level INTEGER',
         'ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_level INTEGER',
         'ALTER TABLE products ADD COLUMN IF NOT EXISTS danger_level INTEGER',
-        'ALTER TABLE storage_locations ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id) ON DELETE SET NULL'
+        'ALTER TABLE products ADD COLUMN IF NOT EXISTS default_supplier_id INTEGER REFERENCES suppliers(id) ON DELETE SET NULL',
+        'ALTER TABLE storage_locations ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id) ON DELETE SET NULL',
+        'ALTER TABLE inventory ADD COLUMN IF NOT EXISTS batch_number VARCHAR(100)',
+        'ALTER TABLE inventory ADD COLUMN IF NOT EXISTS expiry_date DATE',
+        'ALTER TABLE inventory DROP CONSTRAINT IF EXISTS inventory_product_id_location_id_key',
+        'ALTER TABLE inventory ADD CONSTRAINT inventory_product_location_batch_key UNIQUE(product_id, location_id, batch_number)'
     ];
 
     for (const sql of migrations) {
