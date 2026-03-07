@@ -268,16 +268,25 @@ async function createSchema() {
     );
     `;
 
+    console.log('📦 Initializing schema...');
     await pool.query(schema);
 
     // Schema Migrations for existing tables
-    try {
-        await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS max_stock_level INTEGER');
-        await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_level INTEGER');
-        await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS danger_level INTEGER');
-        await pool.query('ALTER TABLE storage_locations ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id) ON DELETE CASCADE');
-    } catch (e) {
-        console.warn('Migration warnings (probably columns already exist):', e.message);
+    console.log('🚀 Running schema migrations...');
+    const migrations = [
+        'ALTER TABLE products ADD COLUMN IF NOT EXISTS max_stock_level INTEGER',
+        'ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_level INTEGER',
+        'ALTER TABLE products ADD COLUMN IF NOT EXISTS danger_level INTEGER',
+        'ALTER TABLE storage_locations ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id) ON DELETE CASCADE'
+    ];
+
+    for (const sql of migrations) {
+        try {
+            await pool.query(sql);
+            console.log(`✅ Migration successful: ${sql.slice(0, 30)}...`);
+        } catch (e) {
+            console.error(`❌ Migration failed (${sql.slice(0, 30)}...):`, e.message);
+        }
     }
 }
 
