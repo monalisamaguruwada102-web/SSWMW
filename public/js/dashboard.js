@@ -8,17 +8,21 @@ window.DashboardPage = {
                 <span class="badge badge-success" style="font-size:11px">Live</span>
             </div>
             <div class="stat-grid" id="stat-grid">
-                <div class="stat-card" style="--stat-color:#6366f1;--stat-bg:rgba(99,102,241,0.1)">
+                <div class="stat-card clickable" style="--stat-color:#6366f1;--stat-bg:rgba(99,102,241,0.1)" onclick="location.hash='#inventory'">
                     <div class="stat-icon"><svg data-feather="package"></svg></div>
                     <div><div class="stat-value" id="stat-products">—</div><div class="stat-label">Total Products</div></div>
                 </div>
-                <div class="stat-card" style="--stat-color:#10b981;--stat-bg:rgba(16,185,129,0.1)">
+                <div class="stat-card clickable" style="--stat-color:#10b981;--stat-bg:rgba(16,185,129,0.1)" onclick="location.hash='#inventory'">
                     <div class="stat-icon"><svg data-feather="layers"></svg></div>
                     <div><div class="stat-value" id="stat-stock">—</div><div class="stat-label">Total Stock Units</div></div>
                 </div>
-                <div class="stat-card" style="--stat-color:#f59e0b;--stat-bg:rgba(245,158,11,0.1)">
+                <div class="stat-card clickable" style="--stat-color:#f59e0b;--stat-bg:rgba(245,158,11,0.1)" id="stat-low-card">
                     <div class="stat-icon"><svg data-feather="alert-triangle"></svg></div>
                     <div><div class="stat-value" id="stat-low">—</div><div class="stat-label">Low Stock Items</div></div>
+                </div>
+                <div class="stat-card clickable" style="--stat-color:#ef4444;--stat-bg:rgba(239,68,68,0.1)" id="stat-out-card">
+                    <div class="stat-icon"><svg data-feather="slash"></svg></div>
+                    <div><div class="stat-value" id="stat-out">—</div><div class="stat-label">Out of Stock</div></div>
                 </div>
                 <div class="stat-card" style="--stat-color:#3b82f6;--stat-bg:rgba(59,130,246,0.1)">
                     <div class="stat-icon"><svg data-feather="clipboard"></svg></div>
@@ -33,7 +37,18 @@ window.DashboardPage = {
             document.getElementById('stat-products').textContent = fmt.number(stats.totalProducts);
             document.getElementById('stat-stock').textContent = fmt.number(stats.totalStock);
             document.getElementById('stat-low').textContent = fmt.number(stats.lowStockCount);
+            document.getElementById('stat-out').textContent = fmt.number(stats.outOfStockCount || 0);
             document.getElementById('stat-orders').textContent = fmt.number(stats.pendingOrders);
+
+            // Click Handlers for filtering
+            document.getElementById('stat-low-card').onclick = () => {
+                window.InventoryPage.initialFilter = 'low';
+                location.hash = '#inventory';
+            };
+            document.getElementById('stat-out-card').onclick = () => {
+                window.InventoryPage.initialFilter = 'out';
+                location.hash = '#inventory';
+            };
 
             this.charts.forEach(c => c.destroy());
             this.charts = [];

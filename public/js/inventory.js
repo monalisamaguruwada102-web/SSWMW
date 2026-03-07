@@ -1,19 +1,23 @@
 window.InventoryPage = {
     async render() {
+        const initialStatus = this.initialFilter || '';
+        this.initialFilter = null; // Reset for next time
+
         document.getElementById('page-content').innerHTML = `
             <div class="page-header">
                 <h2>Inventory</h2>
                 <div class="page-header-actions">
                     <select class="form-select" id="inv-status" style="width:140px">
-                        <option value="">All Status</option>
-                        <option value="ok">OK</option>
-                        <option value="low">Low Stock</option>
-                        <option value="out">Out of Stock</option>
+                        <option value="" ${initialStatus === '' ? 'selected' : ''}>All Status</option>
+                        <option value="ok" ${initialStatus === 'ok' ? 'selected' : ''}>OK</option>
+                        <option value="low" ${initialStatus === 'low' ? 'selected' : ''}>Low Stock</option>
+                        <option value="out" ${initialStatus === 'out' ? 'selected' : ''}>Out of Stock</option>
                     </select>
                     <div class="search-wrap" style="height: 38px;"><i data-feather="search" class="input-icon"></i>
                         <input type="text" class="search-input" id="inv-sku-search" placeholder="SKU Search...">
                         <button class="btn-icon" id="inv-scan-btn" title="Scan Barcode" style="margin-left: 8px;"><i data-feather="maximize"></i></button>
                     </div>
+                    <button class="btn btn-warning" id="inv-out-toggle"><i data-feather="slash"></i>Out of Stock</button>
                     <button class="btn btn-ghost" id="inv-history-btn"><i data-feather="clock"></i>History</button>
                 </div>
             </div>
@@ -27,8 +31,13 @@ window.InventoryPage = {
             </div>
             <div id="inv-pagination" class="pagination"></div>`;
         feather.replace();
-        this.loadInventory();
+        this.loadInventory(initialStatus);
         document.getElementById('inv-status').addEventListener('change', e => this.loadInventory(e.target.value));
+        document.getElementById('inv-out-toggle').addEventListener('click', () => {
+            const select = document.getElementById('inv-status');
+            select.value = 'out';
+            this.loadInventory('out');
+        });
         document.getElementById('inv-history-btn').addEventListener('click', () => this.showHistory());
 
         const skuSearch = document.getElementById('inv-sku-search');

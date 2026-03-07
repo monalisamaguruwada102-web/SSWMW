@@ -104,6 +104,13 @@ router.get('/dashboard-stats', requireAuth, async (req, res) => {
             GROUP BY p.id HAVING COALESCE(SUM(i.quantity), 0) <= p.min_stock_level
         ) AS subq
     `);
+    const outOfStockCount = await getOne(`
+        SELECT COUNT(*) as count FROM (
+            SELECT p.id FROM products p
+            LEFT JOIN inventory i ON p.id = i.product_id
+            GROUP BY p.id HAVING COALESCE(SUM(i.quantity), 0) = 0
+        ) AS subq
+    `);
     const pendingOrders = await getOne('SELECT COUNT(*) as count FROM orders WHERE status = \'pending\'');
     const recentMovements = await getAll(`
         SELECT m.type, m.quantity, m.created_at, p.name as product_name
@@ -130,6 +137,7 @@ router.get('/dashboard-stats', requireAuth, async (req, res) => {
         totalProducts: totalProducts?.count || 0,
         totalStock: totalStock?.sum || 0,
         lowStockCount: lowStockCount?.count || 0,
+        outOfStockCount: outOfStockCount?.count || 0,
         pendingOrders: pendingOrders?.count || 0,
         recentMovements,
         stockByCategory,
