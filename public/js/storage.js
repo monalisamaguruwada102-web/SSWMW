@@ -30,6 +30,9 @@ window.StoragePage = {
                 return `<div class="location-tile" style="--loc-color:${color}" onclick="StoragePage.viewLocation(${l.id})">
                     <div class="location-id">${l.section}-${l.rack}-${l.shelf}</div>
                     <div class="location-desc">${l.description || 'Storage area'}</div>
+                    <div style="font-size:12px; font-weight:bold; color:var(--primary-color); margin-bottom: 8px;">
+                        <i data-feather="map-pin" style="width:12px; height:12px;"></i> ${l.warehouse_name || 'Main Warehouse'}
+                    </div>
                     <div style="margin-bottom:6px">
                         <div class="stock-bar" style="width:100%;margin-bottom:3px">
                             <div class="stock-bar-fill stock-ok" style="width:${pct}%"></div>
@@ -41,6 +44,7 @@ window.StoragePage = {
                     </div>
                 </div>`;
             }).join('');
+            feather.replace();
         } catch (e) { Toast.error(e.message); }
     },
 
@@ -52,6 +56,9 @@ window.StoragePage = {
                 <div style="margin-bottom:16px">
                     <div style="font-size:22px;font-weight:800">${location.section}-${location.rack}-${location.shelf}</div>
                     <div class="text-muted">${location.description || ''}</div>
+                    <div style="margin-top:5px; font-weight:600; color:var(--primary-color);">
+                        Warehouse: ${location.warehouse_name || 'Main Warehouse'}
+                    </div>
                 </div>
                 ${items.length ? `<table style="width:100%"><thead><tr><th>Product</th><th>SKU</th><th>Qty</th><th>Unit</th></tr></thead>
                 <tbody>${items.map(i => `<tr><td>${i.product_name}</td><td>${i.sku}</td><td><strong>${fmt.number(i.quantity)}</strong></td><td>${i.unit}</td></tr>`).join('')}
@@ -60,9 +67,23 @@ window.StoragePage = {
         } catch (e) { Toast.error(e.message); }
     },
 
-    openForm(location = null) {
+    async openForm(location = null) {
+        let warehouseOptions = '';
+        try {
+            const { warehouses } = await API.get('/warehouses');
+            warehouseOptions = warehouses.map(w => `<option value="${w.id}" ${location?.warehouse_id === w.id ? 'selected' : ''}>${w.name} (${w.code})</option>`).join('');
+        } catch (e) {
+            warehouseOptions = '<option value="">Default Warehouse</option>';
+        }
+
         Modal.open(location ? 'Edit Location' : 'Add Storage Location', `
             <form id="loc-form">
+                <div class="form-group">
+                    <label class="form-label">Warehouse *</label>
+                    <select class="form-input" id="lf-warehouse" required>
+                        ${warehouseOptions}
+                    </select>
+                </div>
                 <div class="form-row-3">
                     <div class="form-group"><label class="form-label">Section *</label>
                         <input class="form-input" id="lf-section" value="${location?.section || ''}" placeholder="A" maxlength="2" required></div>
@@ -84,6 +105,7 @@ window.StoragePage = {
         document.getElementById('loc-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const body = {
+                warehouse_id: parseInt(document.getElementById('lf-warehouse').value),
                 section: document.getElementById('lf-section').value.toUpperCase(),
                 rack: document.getElementById('lf-rack').value,
                 shelf: document.getElementById('lf-shelf').value,

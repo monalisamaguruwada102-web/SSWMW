@@ -180,14 +180,26 @@ function exportPDF(data, filename = 'report.pdf', title = 'Report') {
     Toast.success('PDF exported!');
 }
 
-// ===================== Select Options =====================
-async function loadSelectOptions(selectId, endpoint, valKey = 'id', labelFn) {
-    const sel = document.getElementById(selectId);
-    if (!sel) return;
-    try {
-        const data = await API.get(endpoint);
-        const items = Object.values(data)[0];
-        sel.innerHTML = '<option value="">Select...</option>' +
-            items.map(i => `<option value="${i[valKey]}">${labelFn ? labelFn(i) : i.name}</option>`).join('');
-    } catch { }
-}
+// ===================== General Utilities =====================
+const Utils = {
+    escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    },
+    formatNumber(n) { return fmt.number(n); },
+    formatDate(d) { return fmt.date(d); },
+    formatDateTime(d) { return fmt.datetime(d); }
+};
+
+// Export for use in other modules
+window.API = API;
+window.Toast = Toast;
+window.fmt = fmt;
+window.Modal = Modal;
+window.Utils = Utils;
+window.exportCSV = exportCSV;
+window.exportPDF = exportPDF;
+window.loadSelectOptions = loadSelectOptions;
+window.debounce = debounce;

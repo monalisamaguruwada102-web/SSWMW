@@ -7,6 +7,10 @@ const AppState = {
 // ===================== Router =====================
 const routes = {
     dashboard: () => window.DashboardPage?.render(),
+    stockmaster: () => window.StockMasterPage?.render(),
+    procurement: () => window.ProcurementPage?.render(),
+    grn: () => window.GrnPage?.render(),
+    transfers: () => window.TransfersPage?.render(),
     products: () => window.ProductsPage?.render(),
     inventory: () => window.InventoryPage?.render(),
     movements: () => window.MovementsPage?.render(),
@@ -31,8 +35,10 @@ function navigate(page) {
 
     // Update breadcrumb
     const labels = {
-        dashboard: 'Dashboard', products: 'Products', inventory: 'Inventory',
-        movements: 'Movements', storage: 'Storage Locations', orders: 'Orders & Requests',
+        dashboard: 'Dashboard', stockmaster: 'Stock Master', procurement: 'Procurement (Requisitions)',
+        grn: 'GRN (Receiving)', transfers: 'Stock Transfers',
+        products: 'Products', inventory: 'Inventory',
+        movements: 'Old Movements', storage: 'Storage Locations', orders: 'Dispatch (Orders)',
         reports: 'Reports', users: 'User Management', activity: 'Activity Log',
     };
     document.getElementById('breadcrumb').textContent = labels[page] || page;

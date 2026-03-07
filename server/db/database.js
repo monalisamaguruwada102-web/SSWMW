@@ -227,6 +227,25 @@ async function createSchema() {
         condition VARCHAR(100) DEFAULT 'Good'
     );
 
+    CREATE TABLE IF NOT EXISTS transfers (
+        id SERIAL PRIMARY KEY,
+        transfer_number VARCHAR(100) UNIQUE NOT NULL,
+        from_warehouse_id INTEGER NOT NULL REFERENCES warehouses(id) ON DELETE CASCADE,
+        to_warehouse_id INTEGER NOT NULL REFERENCES warehouses(id) ON DELETE CASCADE,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','in_transit','completed','cancelled')),
+        notes TEXT,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS transfer_items (
+        id SERIAL PRIMARY KEY,
+        transfer_id INTEGER NOT NULL REFERENCES transfers(id) ON DELETE CASCADE,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        quantity INTEGER NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS notifications (
         id SERIAL PRIMARY KEY,
         type VARCHAR(100) NOT NULL,
