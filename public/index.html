@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartStore WMS — Warehouse Management System</title>
+    <meta name="description"
+        content="SmartStore WMS - A modern warehouse management system for tracking inventory, movements, orders and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- jsPDF used for PDF export on the Reports page -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen hidden">
+        <div class="login-bg-blobs">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="blob blob-3"></div>
+        </div>
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="logo-icon">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="12" fill="url(#logoGrad)" />
+                        <path d="M10 28V16l10-6 10 6v12l-10 6-10-6z" stroke="white" stroke-width="2" fill="none" />
+                        <path d="M10 16l10 6 10-6M20 22v10" stroke="white" stroke-width="2" />
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#6366f1" />
+                                <stop offset="100%" stop-color="#8b5cf6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="login-title">SmartStore WMS</h1>
+                    <p class="login-subtitle">Warehouse Management System</p>
+                </div>
+            </div>
+            <form id="login-form" autocomplete="on">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <div class="input-icon-wrap">
+                        <i data-feather="user" class="input-icon"></i>
+                        <input type="text" id="login-username" class="form-input" placeholder="Enter your username"
+                            autocomplete="username" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="input-icon-wrap">
+                        <i data-feather="lock" class="input-icon"></i>
+                        <input type="password" id="login-password" class="form-input" placeholder="Enter your password"
+                            autocomplete="current-password" required>
+                    </div>
+                </div>
+                <div id="login-error" class="alert alert-danger hidden"></div>
+                <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                    <span>Sign In</span>
+                    <i data-feather="arrow-right"></i>
+                </button>
+            </form>
+            <p class="login-hint">Default: admin / admin123</p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="app hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="12" fill="url(#sideLogoGrad)" />
+                        <path d="M10 28V16l10-6 10 6v12l-10 6-10-6z" stroke="white" stroke-width="2" fill="none" />
+                        <path d="M10 16l10 6 10-6M20 22v10" stroke="white" stroke-width="2" />
+                        <defs>
+                            <linearGradient id="sideLogoGrad" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#6366f1" />
+                                <stop offset="100%" stop-color="#8b5cf6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="sidebar-brand">SmartStore</span>
+                </div>
+                <button id="sidebar-toggle" class="sidebar-toggle-btn" title="Toggle sidebar">
+                    <i data-feather="menu"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Main Menu</div>
+                <a href="#dashboard" class="nav-item" data-page="dashboard" id="nav-dashboard">
+                    <i data-feather="grid"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#products" class="nav-item" data-page="products" id="nav-products">
+                    <i data-feather="package"></i>
+                    <span>Products</span>
+                </a>
+                <a href="#inventory" class="nav-item" data-page="inventory" id="nav-inventory">
+                    <i data-feather="layers"></i>
+                    <span>Inventory</span>
+                </a>
+                <a href="#movements" class="nav-item" data-page="movements" id="nav-movements">
+                    <i data-feather="truck"></i>
+                    <span>Movements</span>
+                </a>
+                <a href="#storage" class="nav-item" data-page="storage" id="nav-storage">
+                    <i data-feather="map"></i>
+                    <span>Storage</span>
+                </a>
+                <a href="#orders" class="nav-item" data-page="orders" id="nav-orders">
+                    <i data-feather="clipboard"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="#reports" class="nav-item" data-page="reports" id="nav-reports">
+                    <i data-feather="bar-chart-2"></i>
+                    <span>Reports</span>
+                </a>
+
+                <div class="nav-section-label" id="admin-section">Administration</div>
+                <a href="#users" class="nav-item admin-only" data-page="users" id="nav-users">
+                    <i data-feather="users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="#activity" class="nav-item admin-only" data-page="activity" id="nav-activity">
+                    <i data-feather="activity"></i>
+                    <span>Activity Log</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="sidebar-avatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="sidebar-username">Admin</div>
+                        <div class="user-role" id="sidebar-role">Administrator</div>
+                    </div>
+                </div>
+                <button id="logout-btn" class="logout-btn" title="Logout">
+                    <i data-feather="log-out"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button id="mobile-menu-btn" class="mobile-menu-btn">
+                        <i data-feather="menu"></i>
+                    </button>
+                    <div class="breadcrumb" id="breadcrumb">
+                        <span>Dashboard</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+
+                    <button id="notif-btn" class="topbar-btn notif-btn" title="Notifications">
+                        <i data-feather="bell"></i>
+                        <span class="notif-badge hidden" id="notif-badge">0</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Notification Dropdown -->
+            <div id="notif-dropdown" class="notif-dropdown hidden">
+                <div class="notif-header">
+                    <h3>Notifications</h3>
+                    <button id="mark-all-read" class="btn-link">Mark all read</button>
+                </div>
+                <div id="notif-list" class="notif-list"></div>
+            </div>
+
+            <!-- Page Content -->
+            <main id="page-content" class="page-content">
+                <!-- Dynamic content loaded here -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Universal Modal -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div id="modal" class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Modal</h2>
+                <button id="modal-close" class="modal-close"><i data-feather="x"></i></button>
+            </div>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- JS Modules -->
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/inventory.js"></script>
+    <script src="js/movements.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/orders.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/users.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

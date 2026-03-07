@@ -1,0 +1,91 @@
+const express = require('express');
+const { getAll, getOne, runInsert, runQuery } = require('../db/database');
+const { requireAdmin, requireAuth } = require('../middleware/auth');
+
+const router = express.Router();
+
+// GET /api/products
+router.get('/', requireAuth, (req, res) => {
+    const { search, category_id } = req.query;
+    let sql = `
+        SELECT p.*, c.name as category_name, c.color as category_color,
+               COALESCE(SUM(i.quantity), 0) as total_stock
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN inventory i ON p.id = i.product_id
+        WHERE 1=1
+    `;
+    const params = [];
+    if (search) {
+        sql += ' AND (p.name LIKE ? OR p.sku LIKE ? OR p.description LIKE ?)';
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+    if (category_id) {
+        sql += ' AND p.category_id = ?';
+        params.push(category_id);
+    }
+    sql += ' GROUP BY p.id ORDER BY p.name';
+    const products = getAll(sql, params);
+    res.json({ products });
+});
+
+// GET /api/products/:id
+router.get('/:id', requireAuth, (req, res) => {
+    const product = getOne(`
+        SELECT p.*, c.name as category_name, c.color as category_color,
+               COALESCE(SUM(i.quantity), 0) as total_stock
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN inventory i ON p.id = i.product_id
+        WHERE p.id = ?
+        GROUP BY p.id
+    `, [req.params.id]);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    const stockByLocation = getAll(`
+        SELECT i.*, sl.section, sl.rack, sl.shelf
+        FROM inventory i
+        JOIN storage_locations sl ON i.location_id = sl.id
+        WHERE i.product_id = ?
+    `, [req.params.id]);
+
+    res.json({ product, stockByLocation });
+});
+
+// POST /api/products
+router.post('/', requireAdmin, (req, res) => {
+    const { name, sku, category_id, description, unit, min_stock_level } = req.body;
+    if (!name || !sku) return res.status(400).json({ error: 'Name and SKU required' });
+    const existing = getOne('SELECT id FROM products WHERE sku = ?', [sku]);
+    if (existing) return res.status(409).json({ error: 'SKU already exists' });
+    const id = runInsert(
+        'INSERT INTO products (name, sku, category_id, description, unit, min_stock_level) VALUES (?,?,?,?,?,?)',
+        [name, sku, category_id || null, description || '', unit || 'pcs', min_stock_level || 0]
+    );
+    res.status(201).json({ product: { id, name, sku, category_id, unit, min_stock_level } });
+});
+
+// PUT /api/products/:id
+router.put('/:id', requireAdmin, (req, res) => {
+    const { name, sku, category_id, description, unit, min_stock_level } = req.body;
+    const product = getOne('SELECT * FROM products WHERE id = ?', [req.params.id]);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    runQuery(
+        'UPDATE products SET name=?, sku=?, category_id=?, description=?, unit=?, min_stock_level=?, updated_at=datetime(\'now\') WHERE id=?',
+        [name || product.name, sku || product.sku, category_id ?? product.category_id,
+        description ?? product.description, unit || product.unit,
+        min_stock_level ?? product.min_stock_level, req.params.id]
+    );
+    res.json({ message: 'Product updated' });
+});
+
+// DELETE /api/products/:id
+router.delete('/:id', requireAdmin, (req, res) => {
+    const inInventory = getOne('SELECT id FROM inventory WHERE product_id = ? AND quantity > 0', [req.params.id]);
+    if (inInventory) return res.status(400).json({ error: 'Cannot delete product with existing stock' });
+    runQuery('DELETE FROM inventory WHERE product_id = ?', [req.params.id]);
+    runQuery('DELETE FROM products WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Product deleted' });
+});
+
+module.exports = router;
