@@ -21,9 +21,15 @@ router.get('/', requireAuth, async (req, res) => {
         WHERE 1=1
     `;
     const params = [];
-    if (type) { sql += ' AND m.type = ?'; params.push(type); }
-    if (product_id) { sql += ' AND m.product_id = ?'; params.push(product_id); }
-    sql += ' ORDER BY m.created_at DESC LIMIT ? OFFSET ?';
+    if (type) {
+        sql += ` AND m.type = $${params.length + 1}`;
+        params.push(type);
+    }
+    if (product_id) {
+        sql += ` AND m.product_id = $${params.length + 1}`;
+        params.push(product_id);
+    }
+    sql += ` ORDER BY m.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(parseInt(limit), parseInt(offset));
     res.json({ movements: await getAll(sql, params) });
 });
@@ -40,7 +46,7 @@ router.get('/:id', requireAuth, async (req, res) => {
         LEFT JOIN storage_locations fl ON m.from_location_id = fl.id
         LEFT JOIN storage_locations tl ON m.to_location_id = tl.id
         LEFT JOIN users u ON m.user_id = u.id
-        WHERE m.id = ?
+        WHERE m.id = $1
     `, [req.params.id]);
     if (!movement) return res.status(404).json({ error: 'Movement not found' });
     res.json({ movement });
@@ -70,7 +76,7 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Validate source has enough stock for outgoing/transfer
     if (type === 'outgoing' || type === 'transfer') {
-        const sourceInv = await getOne('SELECT * FROM inventory WHERE product_id = ? AND location_id = ?', [product_id, from_location_id]);
+        const sourceInv = await getOne('SELECT * FROM inventory WHERE product_id = $1 AND location_id = $2', [product_id, from_location_id]);
         if (!sourceInv || sourceInv.quantity < quantity) {
             return res.status(400).json({ error: 'Insufficient stock at source location' });
         }
@@ -78,41 +84,41 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Record movement
     const movId = await runInsert(
-        'INSERT INTO movements (type, product_id, from_location_id, to_location_id, quantity, reference_number, supplier_or_customer, notes, user_id) VALUES (?,?,?,?,?,?,?,?,?)',
+        'INSERT INTO movements (type, product_id, from_location_id, to_location_id, quantity, reference_number, supplier_or_customer, notes, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
         [type, product_id, from_location_id || null, to_location_id || null, quantity, reference_number || null, supplier_or_customer || null, notes || null, req.user.id]
     );
 
     // Update inventory
     if (type === 'incoming') {
-        const inv = await getOne('SELECT * FROM inventory WHERE product_id = ? AND location_id = ?', [product_id, to_location_id]);
+        const inv = await getOne('SELECT * FROM inventory WHERE product_id = $1 AND location_id = $2', [product_id, to_location_id]);
         if (inv) {
-            await runQuery('UPDATE inventory SET quantity = quantity + ?, updated_at = datetime(\'now\') WHERE id = ?', [quantity, inv.id]);
-            await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES (?,?,?,?,?,?,?)',
+            await runQuery('UPDATE inventory SET quantity = quantity + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [quantity, inv.id]);
+            await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
                 [product_id, to_location_id, 'incoming', inv.quantity, inv.quantity + quantity, `Ref: ${reference_number || '-'}`, req.user.id]);
         } else {
-            await runInsert('INSERT INTO inventory (product_id, location_id, quantity) VALUES (?,?,?)', [product_id, to_location_id, quantity]);
-            await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES (?,?,?,?,?,?,?)',
+            await runInsert('INSERT INTO inventory (product_id, location_id, quantity) VALUES ($1,$2,$3)', [product_id, to_location_id, quantity]);
+            await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
                 [product_id, to_location_id, 'incoming', 0, quantity, `Ref: ${reference_number || '-'}`, req.user.id]);
         }
     } else if (type === 'outgoing') {
-        const inv = await getOne('SELECT * FROM inventory WHERE product_id = ? AND location_id = ?', [product_id, from_location_id]);
-        await runQuery('UPDATE inventory SET quantity = quantity - ?, updated_at = datetime(\'now\') WHERE id = ?', [quantity, inv.id]);
-        await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES (?,?,?,?,?,?,?)',
+        const inv = await getOne('SELECT * FROM inventory WHERE product_id = $1 AND location_id = $2', [product_id, from_location_id]);
+        await runQuery('UPDATE inventory SET quantity = quantity - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [quantity, inv.id]);
+        await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
             [product_id, from_location_id, 'outgoing', inv.quantity, inv.quantity - quantity, notes || null, req.user.id]);
     } else if (type === 'transfer') {
-        const srcInv = await getOne('SELECT * FROM inventory WHERE product_id = ? AND location_id = ?', [product_id, from_location_id]);
-        await runQuery('UPDATE inventory SET quantity = quantity - ?, updated_at = datetime(\'now\') WHERE id = ?', [quantity, srcInv.id]);
-        await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES (?,?,?,?,?,?,?)',
+        const srcInv = await getOne('SELECT * FROM inventory WHERE product_id = $1 AND location_id = $2', [product_id, from_location_id]);
+        await runQuery('UPDATE inventory SET quantity = quantity - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [quantity, srcInv.id]);
+        await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
             [product_id, from_location_id, 'transfer_out', srcInv.quantity, srcInv.quantity - quantity, notes || null, req.user.id]);
 
-        const dstInv = await getOne('SELECT * FROM inventory WHERE product_id = ? AND location_id = ?', [product_id, to_location_id]);
+        const dstInv = await getOne('SELECT * FROM inventory WHERE product_id = $1 AND location_id = $2', [product_id, to_location_id]);
         if (dstInv) {
-            await runQuery('UPDATE inventory SET quantity = quantity + ?, updated_at = datetime(\'now\') WHERE id = ?', [quantity, dstInv.id]);
-            await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES (?,?,?,?,?,?,?)',
+            await runQuery('UPDATE inventory SET quantity = quantity + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [quantity, dstInv.id]);
+            await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
                 [product_id, to_location_id, 'transfer_in', dstInv.quantity, dstInv.quantity + quantity, notes || null, req.user.id]);
         } else {
-            await runInsert('INSERT INTO inventory (product_id, location_id, quantity) VALUES (?,?,?)', [product_id, to_location_id, quantity]);
-            await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES (?,?,?,?,?,?,?)',
+            await runInsert('INSERT INTO inventory (product_id, location_id, quantity) VALUES ($1,$2,$3)', [product_id, to_location_id, quantity]);
+            await runInsert('INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
                 [product_id, to_location_id, 'transfer_in', 0, quantity, notes || null, req.user.id]);
         }
     }

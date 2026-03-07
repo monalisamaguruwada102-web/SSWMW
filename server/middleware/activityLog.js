@@ -6,20 +6,20 @@ function activityLogger(req, res, next) {
         return next();
     }
 
-    const originalJson = res.json.bind(res);
+    const originalJson = res.json;
     res.json = async function (body) {
         // Only log on success
         if (res.statusCode < 400 && req.user) {
             try {
                 const pathParts = req.path.split('/').filter(Boolean);
-                const entityType = pathParts[1] || 'unknown'; // e.g., 'products', 'inventory'
-                const entityId = pathParts[2] ? parseInt(pathParts[2]) : null;
+                const entityType = pathParts[1] || 'unknown';
+                const entityId = pathParts[2] && !isNaN(pathParts[2]) ? parseInt(pathParts[2]) : null;
                 const action = method === 'POST' ? 'CREATE'
-                    : method === 'PUT' || method === 'PATCH' ? 'UPDATE'
+                    : (method === 'PUT' || method === 'PATCH') ? 'UPDATE'
                         : 'DELETE';
 
                 await runInsert(
-                    'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, details, ip_address) VALUES (?,?,?,?,?,?)',
+                    'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, details, ip_address) VALUES ($1,$2,$3,$4,$5,$6)',
                     [
                         req.user.id,
                         action,
@@ -30,11 +30,10 @@ function activityLogger(req, res, next) {
                     ]
                 );
             } catch (e) {
-                // Don't let logging errors break responses
                 console.error('Activity log error:', e.message);
             }
         }
-        return originalJson(body);
+        return originalJson.apply(res, arguments);
     };
 
     next();

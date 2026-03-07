@@ -18,8 +18,14 @@ router.get('/', requireAuth, async (req, res) => {
         WHERE 1=1
     `;
     const params = [];
-    if (category_id) { sql += ' AND p.category_id = ?'; params.push(category_id); }
-    if (location_id) { sql += ' AND i.location_id = ?'; params.push(location_id); }
+    if (category_id) {
+        sql += ` AND p.category_id = $${params.length + 1}`;
+        params.push(category_id);
+    }
+    if (location_id) {
+        sql += ` AND i.location_id = $${params.length + 1}`;
+        params.push(location_id);
+    }
     if (status === 'low') sql += ' AND i.quantity > 0 AND i.quantity <= p.min_stock_level';
     else if (status === 'out') sql += ' AND i.quantity = 0';
     else if (status === 'ok') sql += ' AND i.quantity > p.min_stock_level';
@@ -55,8 +61,11 @@ router.get('/history', requireAuth, async (req, res) => {
         WHERE 1=1
     `;
     const params = [];
-    if (product_id) { sql += ' AND ih.product_id = ?'; params.push(product_id); }
-    sql += ' ORDER BY ih.created_at DESC LIMIT ?';
+    if (product_id) {
+        sql += ` AND ih.product_id = $${params.length + 1}`;
+        params.push(product_id);
+    }
+    sql += ` ORDER BY ih.created_at DESC LIMIT $${params.length + 1}`;
     params.push(parseInt(limit));
     res.json({ history: await getAll(sql, params) });
 });
@@ -67,25 +76,25 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (quantity === undefined || quantity < 0) {
         return res.status(400).json({ error: 'Valid quantity required' });
     }
-    const inv = await getOne('SELECT * FROM inventory WHERE id = ?', [req.params.id]);
+    const inv = await getOne('SELECT * FROM inventory WHERE id = $1', [req.params.id]);
     if (!inv) return res.status(404).json({ error: 'Inventory record not found' });
 
     const before = inv.quantity;
-    await runQuery('UPDATE inventory SET quantity=?, updated_at=datetime(\'now\') WHERE id=?', [quantity, req.params.id]);
+    await runQuery('UPDATE inventory SET quantity=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2', [quantity, req.params.id]);
 
     // Log history
     await runInsert(
-        'INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES (?,?,?,?,?,?,?)',
+        'INSERT INTO inventory_history (product_id, location_id, change_type, quantity_before, quantity_after, notes, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7)',
         [inv.product_id, inv.location_id, 'adjustment', before, quantity, notes || 'Manual adjustment', req.user.id]
     );
 
     // Check for low stock and notify admins
-    const product = await getOne('SELECT * FROM products WHERE id = ?', [inv.product_id]);
+    const product = await getOne('SELECT * FROM products WHERE id = $1', [inv.product_id]);
     if (product && quantity <= product.min_stock_level && quantity > 0) {
         const admins = await getAll('SELECT id FROM users WHERE role = \'admin\' AND is_active = 1');
         for (const admin of admins) {
             await runInsert(
-                'INSERT INTO notifications (type, title, message, user_id) VALUES (?,?,?,?)',
+                'INSERT INTO notifications (type, title, message, user_id) VALUES ($1,$2,$3,$4)',
                 ['low_stock', 'Low Stock Alert', `${product.name} is below minimum level (${quantity}/${product.min_stock_level})`, admin.id]
             );
         }
@@ -98,9 +107,9 @@ router.put('/:id', requireAuth, async (req, res) => {
 router.post('/', requireAuth, async (req, res) => {
     const { product_id, location_id, quantity } = req.body;
     if (!product_id || !location_id) return res.status(400).json({ error: 'Product and location required' });
-    const existing = await getOne('SELECT id FROM inventory WHERE product_id = ? AND location_id = ?', [product_id, location_id]);
+    const existing = await getOne('SELECT id FROM inventory WHERE product_id = $1 AND location_id = $2', [product_id, location_id]);
     if (existing) return res.status(409).json({ error: 'Inventory record already exists for this product/location' });
-    const id = await runInsert('INSERT INTO inventory (product_id, location_id, quantity) VALUES (?,?,?)', [product_id, location_id, quantity || 0]);
+    const id = await runInsert('INSERT INTO inventory (product_id, location_id, quantity) VALUES ($1,$2,$3)', [product_id, location_id, quantity || 0]);
     res.status(201).json({ id });
 });
 

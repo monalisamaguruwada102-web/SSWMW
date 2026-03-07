@@ -1,0 +1,62 @@
+﻿node : C:\Users\JOSHWEB
+S\Desktop\SSWMS\server\
+middleware\activityLog.
+js:21
+At line:1 char:1
++ node 
+server/server.js > 
+error.log 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (C:\Users\JOSH   
+ WE...tivityLog.js:    
+21:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+                await 
+runInsert(
+                ^^^^^
+
+SyntaxError: await is 
+only valid in async 
+functions and the top 
+level bodies of modules
+    at wrapSafe (node:i
+nternal/modules/cjs/loa
+der:1692:18)
+    at Module._compile 
+(node:internal/modules/
+cjs/loader:1735:20)
+    at Object..js (node
+:internal/modules/cjs/l
+oader:1893:10)
+    at Module.load (nod
+e:internal/modules/cjs/
+loader:1481:32)
+    at Module._load (no
+de:internal/modules/cjs
+/loader:1300:12)
+    at TracingChannel.t
+raceSync (node:diagnost
+ics_channel:328:14)
+    at wrapModuleLoad (
+node:internal/modules/c
+js/loader:245:24)
+    at Module.require (
+node:internal/modules/c
+js/loader:1504:12)
+    at require (node:in
+ternal/modules/helpers:
+152:16)
+    at 
+Object.<anonymous> (C:\
+Users\JOSHWEBS\Desktop\
+SSWMS\server\server.js:
+22:28)
+
+Node.js v24.12.0

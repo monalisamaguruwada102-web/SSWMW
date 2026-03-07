@@ -17,11 +17,11 @@ router.get('/', requireAuth, async (req, res) => {
     `;
     const params = [];
     if (search) {
-        sql += ' AND (p.name LIKE ? OR p.sku LIKE ? OR p.description LIKE ?)';
+        sql += ` AND (p.name ILIKE $${params.length + 1} OR p.sku ILIKE $${params.length + 2} OR p.description ILIKE $${params.length + 3})`;
         params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
     if (category_id) {
-        sql += ' AND p.category_id = $1';
+        sql += ` AND p.category_id = $${params.length + 1}`;
         params.push(category_id);
     }
     sql += ' GROUP BY p.id, c.name, c.color ORDER BY p.name';
@@ -37,7 +37,7 @@ router.get('/:id', requireAuth, async (req, res) => {
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN inventory i ON p.id = i.product_id
-        WHERE p.id = ?
+        WHERE p.id = $1
         GROUP BY p.id, c.name, c.color
     `, [req.params.id]);
     if (!product) return res.status(404).json({ error: 'Product not found' });
@@ -46,7 +46,7 @@ router.get('/:id', requireAuth, async (req, res) => {
         SELECT i.*, sl.section, sl.rack, sl.shelf
         FROM inventory i
         JOIN storage_locations sl ON i.location_id = sl.id
-        WHERE i.product_id = ?
+        WHERE i.product_id = $1
     `, [req.params.id]);
 
     res.json({ product, stockByLocation });
@@ -82,10 +82,10 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
 // DELETE /api/products/:id
 router.delete('/:id', requireAdmin, async (req, res) => {
-    const inInventory = await getOne('SELECT id FROM inventory WHERE product_id = ? AND quantity > 0', [req.params.id]);
+    const inInventory = await getOne('SELECT id FROM inventory WHERE product_id = $1 AND quantity > 0', [req.params.id]);
     if (inInventory) return res.status(400).json({ error: 'Cannot delete product with existing stock' });
-    await runQuery('DELETE FROM inventory WHERE product_id = ?', [req.params.id]);
-    await runQuery('DELETE FROM products WHERE id = ?', [req.params.id]);
+    await runQuery('DELETE FROM inventory WHERE product_id = $1', [req.params.id]);
+    await runQuery('DELETE FROM products WHERE id = $1', [req.params.id]);
     res.json({ message: 'Product deleted' });
 });
 

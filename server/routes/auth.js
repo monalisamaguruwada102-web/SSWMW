@@ -13,7 +13,7 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ error: 'Username and password required' });
     }
 
-    const user = await getOne('SELECT * FROM users WHERE username = ? AND is_active = 1', [username]);
+    const user = await getOne('SELECT * FROM users WHERE username = $1 AND is_active = 1', [username]);
     if (!user) {
         return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Update last login
-    await runQuery('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?', [user.id]);
+    await runQuery('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
 
     const token = jwt.sign(
         { id: user.id, username: user.username, role: user.role },
@@ -56,7 +56,7 @@ router.get('/me', async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await getOne('SELECT id, username, email, role, last_login FROM users WHERE id = ?', [decoded.id]);
+        const user = await getOne('SELECT id, username, email, role, last_login FROM users WHERE id = $1', [decoded.id]);
         if (!user) return res.status(401).json({ error: 'User not found' });
         res.json({ user });
     } catch {

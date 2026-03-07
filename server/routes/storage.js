@@ -32,7 +32,7 @@ router.get('/:id', requireAuth, async (req, res) => {
         SELECT i.*, p.name as product_name, p.sku, p.unit
         FROM inventory i
         JOIN products p ON i.product_id = p.id
-        WHERE i.location_id = ? AND i.quantity > 0
+        WHERE i.location_id = $1 AND i.quantity > 0
     `, [req.params.id]);
     res.json({ location, items });
 });
@@ -60,9 +60,9 @@ router.put('/:id', requireAdmin, async (req, res) => {
 
 // DELETE /api/storage/:id
 router.delete('/:id', requireAdmin, async (req, res) => {
-    const hasStock = await getOne('SELECT id FROM inventory WHERE location_id = ? AND quantity > 0', [req.params.id]);
+    const hasStock = await getOne('SELECT id FROM inventory WHERE location_id = $1 AND quantity > 0', [req.params.id]);
     if (hasStock) return res.status(400).json({ error: 'Cannot delete location with existing stock' });
-    await runQuery('DELETE FROM storage_locations WHERE id = ?', [req.params.id]);
+    await runQuery('DELETE FROM storage_locations WHERE id = $1', [req.params.id]);
     res.json({ message: 'Location deleted' });
 });
 

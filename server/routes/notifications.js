@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/notifications
 router.get('/', requireAuth, async (req, res) => {
     const notifications = await getAll(
-        'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50',
+        'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
         [req.user.id]
     );
     const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -16,13 +16,13 @@ router.get('/', requireAuth, async (req, res) => {
 
 // PUT /api/notifications/:id/read
 router.put('/:id/read', requireAuth, async (req, res) => {
-    await runQuery('UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    await runQuery('UPDATE notifications SET is_read = 1 WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
     res.json({ message: 'Marked as read' });
 });
 
 // PUT /api/notifications/read-all
 router.put('/read-all', requireAuth, async (req, res) => {
-    await runQuery('UPDATE notifications SET is_read = 1 WHERE user_id = ?', [req.user.id]);
+    await runQuery('UPDATE notifications SET is_read = 1 WHERE user_id = $1', [req.user.id]);
     res.json({ message: 'All notifications marked as read' });
 });
 

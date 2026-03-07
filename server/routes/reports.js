@@ -41,8 +41,14 @@ router.get('/movements', requireAuth, async (req, res) => {
         WHERE 1=1
     `;
     const params = [];
-    if (from) { sql += ' AND m.created_at >= ?'; params.push(from); }
-    if (to) { sql += ' AND m.created_at <= ?'; params.push(to + ' 23:59:59'); }
+    if (from) {
+        sql += ` AND m.created_at >= $${params.length + 1}`;
+        params.push(from);
+    }
+    if (to) {
+        sql += ` AND m.created_at <= $${params.length + 1}`;
+        params.push(to + ' 23:59:59');
+    }
     sql += ' ORDER BY m.created_at DESC';
     res.json({ data: await getAll(sql, params) });
 });
@@ -74,9 +80,15 @@ router.get('/activity', requireAuth, async (req, res) => {
         WHERE 1=1
     `;
     const params = [];
-    if (from) { sql += ' AND al.created_at >= ?'; params.push(from); }
-    if (to) { sql += ' AND al.created_at <= ?'; params.push(to + ' 23:59:59'); }
-    sql += ' ORDER BY al.created_at DESC LIMIT ?';
+    if (from) {
+        sql += ` AND al.created_at >= $${params.length + 1}`;
+        params.push(from);
+    }
+    if (to) {
+        sql += ` AND al.created_at <= $${params.length + 1}`;
+        params.push(to + ' 23:59:59');
+    }
+    sql += ` ORDER BY al.created_at DESC LIMIT $${params.length + 1}`;
     params.push(parseInt(limit));
     res.json({ data: await getAll(sql, params) });
 });
@@ -110,7 +122,7 @@ router.get('/dashboard-stats', requireAuth, async (req, res) => {
                SUM(CASE WHEN type='incoming' THEN quantity ELSE 0 END) as incoming,
                SUM(CASE WHEN type='outgoing' THEN quantity ELSE 0 END) as outgoing
         FROM movements
-        WHERE created_at >= date('now', '-30 days')
+        WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
         GROUP BY DATE(created_at)
         ORDER BY date
     `);

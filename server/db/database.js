@@ -2,14 +2,13 @@ const { Pool } = require('pg');
 
 let pool = null;
 
-// Regex helpers to translate SQLite to Postgres syntax
+// Regex helpers to translate SQLite-like syntax to Postgres syntax
 function pgSql(sql) {
     let result = sql;
-    // Replace SQLite variables ? with Postgres variables $1, $2...
-    let i = 0;
-    result = result.replace(/\?/g, () => '$' + (++i));
+    // Standardize: We now expect native Postgres $1, $2 syntax from routes.
+    // Fragile '?' replacement removed in favor of explicit $n usage.
 
-    // Replace datetime functions
+    // Replace datetime functions (compatibility layer)
     result = result.replace(/datetime\('now'\)/g, 'CURRENT_TIMESTAMP');
     result = result.replace(/date\('now',\s*'-30 days'\)/g, "CURRENT_DATE - INTERVAL '30 days'");
 

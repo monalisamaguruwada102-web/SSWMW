@@ -14,9 +14,9 @@ router.get('/', requireAuth, async (req, res) => {
 router.post('/', requireAdmin, async (req, res) => {
     const { name, description, color } = req.body;
     if (!name) return res.status(400).json({ error: 'Name required' });
-    const existing = await getOne('SELECT id FROM categories WHERE name = ?', [name]);
+    const existing = await getOne('SELECT id FROM categories WHERE name = $1', [name]);
     if (existing) return res.status(409).json({ error: 'Category already exists' });
-    const id = await runInsert('INSERT INTO categories (name, description, color) VALUES (?,?,?)',
+    const id = await runInsert('INSERT INTO categories (name, description, color) VALUES ($1,$2,$3)',
         [name, description || '', color || '#6366f1']);
     res.status(201).json({ category: { id, name, description, color } });
 });
@@ -24,18 +24,18 @@ router.post('/', requireAdmin, async (req, res) => {
 // PUT /api/categories/:id
 router.put('/:id', requireAdmin, async (req, res) => {
     const { name, description, color } = req.body;
-    const cat = await getOne('SELECT * FROM categories WHERE id = ?', [req.params.id]);
+    const cat = await getOne('SELECT * FROM categories WHERE id = $1', [req.params.id]);
     if (!cat) return res.status(404).json({ error: 'Category not found' });
-    await runQuery('UPDATE categories SET name=?, description=?, color=? WHERE id=?',
+    await runQuery('UPDATE categories SET name=$1, description=$2, color=$3 WHERE id=$4',
         [name || cat.name, description ?? cat.description, color || cat.color, req.params.id]);
     res.json({ message: 'Category updated' });
 });
 
 // DELETE /api/categories/:id
 router.delete('/:id', requireAdmin, async (req, res) => {
-    const inUse = await getOne('SELECT id FROM products WHERE category_id = ?', [req.params.id]);
+    const inUse = await getOne('SELECT id FROM products WHERE category_id = $1', [req.params.id]);
     if (inUse) return res.status(400).json({ error: 'Category in use by products' });
-    await runQuery('DELETE FROM categories WHERE id = ?', [req.params.id]);
+    await runQuery('DELETE FROM categories WHERE id = $1', [req.params.id]);
     res.json({ message: 'Category deleted' });
 });
 
