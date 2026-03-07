@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smartstore-v3';
+const CACHE_NAME = 'smartstore-v4';
 const ASSETS = [
     './',
     './index.html',
@@ -6,6 +6,21 @@ const ASSETS = [
     './js/app.js',
     './js/utils.js',
     './js/auth.js',
+    './js/dashboard.js',
+    './js/products.js',
+    './js/inventory.js',
+    './js/movements.js',
+    './js/storage.js',
+    './js/orders.js',
+    './js/reports.js',
+    './js/users.js',
+    './js/notifications.js',
+    './js/stockMaster.js',
+    './js/procurement.js',
+    './js/grn.js',
+    './js/transfers.js',
+    './js/picking.js',
+    './js/analytics.js',
     './manifest.json',
     './icons/icon.png'
 ];

@@ -70,6 +70,11 @@ async function start() {
     try {
         await getDb();
         await seedDatabase();
+
+        // Run smart procurement check on startup and then every 12h
+        SmartProcurement.checkAll();
+        setInterval(() => SmartProcurement.checkAll(), 12 * 60 * 60 * 1000);
+
         app.listen(PORT, () => {
             console.log(`\n🚀 SmartStore WMS running at http://localhost:${PORT}`);
             console.log(`   Login: admin@sswms.com / admin123  (Administrator)`);
