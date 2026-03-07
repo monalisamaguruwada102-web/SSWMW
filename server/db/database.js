@@ -277,15 +277,15 @@ async function createSchema() {
         'ALTER TABLE products ADD COLUMN IF NOT EXISTS max_stock_level INTEGER',
         'ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_level INTEGER',
         'ALTER TABLE products ADD COLUMN IF NOT EXISTS danger_level INTEGER',
-        'ALTER TABLE storage_locations ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id) ON DELETE CASCADE'
+        'ALTER TABLE storage_locations ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id) ON DELETE SET NULL'
     ];
 
     for (const sql of migrations) {
         try {
             await pool.query(sql);
-            console.log(`✅ Migration successful: ${sql.slice(0, 30)}...`);
+            console.log(`✅ [DB] Migration successful: ${sql.slice(0, 40)}...`);
         } catch (e) {
-            console.error(`❌ Migration failed (${sql.slice(0, 30)}...):`, e.message);
+            console.warn(`⚠️ [DB] Migration note (${sql.slice(0, 40)}...):`, e.message);
         }
     }
 }

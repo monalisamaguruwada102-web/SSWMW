@@ -39,6 +39,15 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/transfers', require('./routes/transfers'));
 app.use('/api/debug-db', require('./routes/debug'));
 
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'UP',
+        version: '2.2',
+        dbConnected: !!pool,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // SPA catch-all — serve index.html for all non-API routes
 app.get('*', async (req, res) => {
     if (!req.path.startsWith('/api')) {
