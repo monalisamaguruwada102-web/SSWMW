@@ -3,24 +3,33 @@ const { getAll, runInsert, getOne } = require('./database');
 
 async function seedDatabase() {
     try {
-        const existingUsers = await getAll('SELECT id FROM users LIMIT 1');
-        if (existingUsers.length > 0) {
-            console.log('Database already initialized, skipping core seed...');
-        } else {
-            console.log('Initializing database with default accounts...');
-            const adminHash = bcrypt.hashSync('admin123', 10);
-            const staffHash = bcrypt.hashSync('staff123', 10);
+        console.log('🔄 Checking for legacy default accounts...');
+        // Remove old style usernames to restrict them as requested
+        await runInsert("DELETE FROM users WHERE username IN ('admin', 'staff') AND email NOT LIKE '%@sswms.com'");
 
+        const adminEmail = 'admin@sswms.com';
+        const staffEmail = 'staff@sswms.com';
+
+        const hasAdmin = await getOne('SELECT id FROM users WHERE email = $1', [adminEmail]);
+        if (!hasAdmin) {
+            console.log('Creating new admin credentials...');
+            const adminHash = bcrypt.hashSync('admin123', 10);
             await runInsert(
                 'INSERT INTO users (username, email, password_hash, role) VALUES ($1,$2,$3,$4)',
-                ['admin@sswms.com', 'admin@sswms.com', adminHash, 'admin']
+                [adminEmail, adminEmail, adminHash, 'admin']
             );
-            await runInsert(
-                'INSERT INTO users (username, email, password_hash, role) VALUES ($1,$2,$3,$4)',
-                ['staff@sswms.com', 'staff@sswms.com', staffHash, 'staff']
-            );
-            console.log('✅ Default accounts created.');
         }
+
+        const hasStaff = await getOne('SELECT id FROM users WHERE email = $1', [staffEmail]);
+        if (!hasStaff) {
+            console.log('Creating new staff credentials...');
+            const staffHash = bcrypt.hashSync('staff123', 10);
+            await runInsert(
+                'INSERT INTO users (username, email, password_hash, role) VALUES ($1,$2,$3,$4)',
+                [staffEmail, staffEmail, staffHash, 'staff']
+            );
+        }
+        console.log('✅ Default accounts verified.');
 
         // Auto-add default Categories
         const catCount = await getOne('SELECT COUNT(*) as count FROM categories');

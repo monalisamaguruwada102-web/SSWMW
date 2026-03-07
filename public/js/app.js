@@ -155,28 +155,34 @@ async function init() {
     } catch {
         showLogin();
     }
+
+    // Check if PWA prompt was already captured
+    if (window.deferredPrompt) {
+        const container = document.getElementById('install-btn-container');
+        if (container) container.classList.remove('hidden');
+    }
 }
 
 // ===================== PWA Installation =====================
-let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-    deferredPrompt = e;
-    const installBtnContainer = document.getElementById('install-btn-container');
-    if (installBtnContainer) installBtnContainer.classList.remove('hidden');
-
-    const installBtn = document.getElementById('pwa-install-btn');
-    if (installBtn) {
-        installBtn.onclick = async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`PWA installation outcome: ${outcome}`);
-            deferredPrompt = null;
-            installBtnContainer.classList.add('hidden');
-        };
-    }
+    window.deferredPrompt = e;
+    const container = document.getElementById('install-btn-container');
+    if (container) container.classList.remove('hidden');
 });
+
+const installBtn = document.getElementById('pwa-install-btn');
+if (installBtn) {
+    installBtn.onclick = async () => {
+        if (!window.deferredPrompt) return;
+        window.deferredPrompt.prompt();
+        const { outcome } = await window.deferredPrompt.userChoice;
+        console.log(`PWA installation outcome: ${outcome}`);
+        window.deferredPrompt = null;
+        const container = document.getElementById('install-btn-container');
+        if (container) container.classList.add('hidden');
+    };
+}
 
 document.addEventListener('DOMContentLoaded', init);
 

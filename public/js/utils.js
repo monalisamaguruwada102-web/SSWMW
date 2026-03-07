@@ -107,10 +107,11 @@ const fmt = {
 
 // ===================== Modal Helper =====================
 const Modal = {
-    open(title, bodyHtml, { wide = false } = {}) {
+    show(title, bodyHtml, size = 'medium') {
+        const isWide = size === 'large' || size === 'wide';
         document.getElementById('modal-title').textContent = title;
         document.getElementById('modal-body').innerHTML = bodyHtml;
-        document.getElementById('modal').className = 'modal' + (wide ? ' modal-lg' : '');
+        document.getElementById('modal').className = 'modal' + (isWide ? ' modal-lg' : '');
         document.getElementById('modal-overlay').classList.remove('hidden');
         feather.replace();
     },
@@ -119,7 +120,7 @@ const Modal = {
         document.getElementById('modal-body').innerHTML = '';
     },
     confirm(msg, onConfirm) {
-        Modal.open('Confirm Action', `
+        Modal.show('Confirm Action', `
             <p style="color:var(--text-secondary);margin-bottom:20px;">${msg}</p>
             <div class="modal-footer" style="padding:0">
                 <button class="btn btn-ghost" onclick="Modal.close()">Cancel</button>
@@ -201,5 +202,4 @@ window.Modal = Modal;
 window.Utils = Utils;
 window.exportCSV = exportCSV;
 window.exportPDF = exportPDF;
-window.loadSelectOptions = loadSelectOptions;
 window.debounce = debounce;
