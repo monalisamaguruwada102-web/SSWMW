@@ -12,12 +12,12 @@ async function seedDatabase() {
             const staffHash = bcrypt.hashSync('staff123', 10);
 
             await runInsert(
-                'INSERT INTO users (username, email, password_hash, role) VALUES (?,?,?,?)',
-                ['admin', 'admin@smartstore.com', adminHash, 'admin']
+                'INSERT INTO users (username, email, password_hash, role) VALUES ($1,$2,$3,$4)',
+                ['admin@sswms.com', 'admin@sswms.com', adminHash, 'admin']
             );
             await runInsert(
-                'INSERT INTO users (username, email, password_hash, role) VALUES (?,?,?,?)',
-                ['staff', 'staff@smartstore.com', staffHash, 'staff']
+                'INSERT INTO users (username, email, password_hash, role) VALUES ($1,$2,$3,$4)',
+                ['staff@sswms.com', 'staff@sswms.com', staffHash, 'staff']
             );
             console.log('✅ Default accounts created.');
         }
@@ -34,7 +34,7 @@ async function seedDatabase() {
                 ['Office Supplies', 'General office consumables', '#8b5cf6']
             ];
             for (const c of categories) {
-                await runInsert('INSERT INTO categories (name, description, color) VALUES (?,?,?)', c);
+                await runInsert('INSERT INTO categories (name, description, color) VALUES ($1,$2,$3)', c);
             }
             console.log('✅ Default categories added.');
         }
@@ -63,7 +63,7 @@ async function seedDatabase() {
                     [hq.id, 'C', '01', '01', 'Dispatch Bay', 500]
                 ];
                 for (const l of locations) {
-                    await runInsert('INSERT INTO storage_locations (warehouse_id, section, rack, shelf, description, capacity) VALUES (?,?,?,?,?,?)', l);
+                    await runInsert('INSERT INTO storage_locations (warehouse_id, section, rack, shelf, description, capacity) VALUES ($1,$2,$3,$4,$5,$6)', l);
                 }
                 console.log('✅ Default storage locations added.');
             }

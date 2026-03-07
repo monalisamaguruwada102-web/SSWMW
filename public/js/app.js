@@ -157,6 +157,27 @@ async function init() {
     }
 }
 
+// ===================== PWA Installation =====================
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtnContainer = document.getElementById('install-btn-container');
+    if (installBtnContainer) installBtnContainer.classList.remove('hidden');
+
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+        installBtn.onclick = async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`PWA installation outcome: ${outcome}`);
+            deferredPrompt = null;
+            installBtnContainer.classList.add('hidden');
+        };
+    }
+});
+
 document.addEventListener('DOMContentLoaded', init);
 
 // Export for use in other modules

@@ -70,8 +70,8 @@ async function start() {
         await seedDatabase();
         app.listen(PORT, () => {
             console.log(`\n🚀 SmartStore WMS running at http://localhost:${PORT}`);
-            console.log(`   Login: admin / admin123  (Administrator)`);
-            console.log(`   Login: staff / staff123  (Staff)\n`);
+            console.log(`   Login: admin@sswms.com / admin123  (Administrator)`);
+            console.log(`   Login: staff@sswms.com / staff123  (Staff)\n`);
         });
     } catch (err) {
         console.error('Failed to start server:', err);
