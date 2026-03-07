@@ -57,8 +57,8 @@ router.get('/low-stock', requireAuth, async (req, res) => {
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN inventory i ON p.id = i.product_id
-        GROUP BY p.id
-        HAVING total_stock <= p.min_stock_level
+        GROUP BY p.id, c.name
+        HAVING COALESCE(SUM(i.quantity), 0) <= p.min_stock_level
         ORDER BY deficit ASC
     `);
     res.json({ data });
@@ -90,7 +90,7 @@ router.get('/dashboard-stats', requireAuth, async (req, res) => {
             SELECT p.id FROM products p
             LEFT JOIN inventory i ON p.id = i.product_id
             GROUP BY p.id HAVING COALESCE(SUM(i.quantity), 0) <= p.min_stock_level
-        )
+        ) AS subq
     `);
     const pendingOrders = await getOne('SELECT COUNT(*) as count FROM orders WHERE status = \'pending\'');
     const recentMovements = await getAll(`
@@ -103,7 +103,7 @@ router.get('/dashboard-stats', requireAuth, async (req, res) => {
         FROM categories c
         LEFT JOIN products p ON c.id = p.category_id
         LEFT JOIN inventory i ON p.id = i.product_id
-        GROUP BY c.id ORDER BY total DESC
+        GROUP BY c.id, c.name, c.color ORDER BY total DESC
     `);
     const movementTrend = await getAll(`
         SELECT DATE(created_at) as date,

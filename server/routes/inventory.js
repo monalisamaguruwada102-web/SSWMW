@@ -35,7 +35,7 @@ router.get('/low-stock', requireAuth, async (req, res) => {
         FROM products p
         LEFT JOIN inventory i ON p.id = i.product_id
         GROUP BY p.id
-        HAVING total_stock <= p.min_stock_level
+        HAVING COALESCE(SUM(i.quantity), 0) <= p.min_stock_level
         ORDER BY total_stock ASC
     `);
     res.json({ items });

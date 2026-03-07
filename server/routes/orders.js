@@ -28,7 +28,7 @@ router.get('/', requireAuth, async (req, res) => {
     const params = [];
     if (status) { sql += ' AND o.status = ?'; params.push(status); }
     if (type) { sql += ' AND o.type = ?'; params.push(type); }
-    sql += ' GROUP BY o.id ORDER BY o.created_at DESC';
+    sql += ' GROUP BY o.id, u1.username, u2.username ORDER BY o.created_at DESC';
     res.json({ orders: await getAll(sql, params) });
 });
 

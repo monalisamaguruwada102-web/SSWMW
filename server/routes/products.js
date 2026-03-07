@@ -24,7 +24,7 @@ router.get('/', requireAuth, async (req, res) => {
         sql += ' AND p.category_id = ?';
         params.push(category_id);
     }
-    sql += ' GROUP BY p.id ORDER BY p.name';
+    sql += ' GROUP BY p.id, c.name, c.color ORDER BY p.name';
     const products = await getAll(sql, params);
     res.json({ products });
 });
@@ -38,7 +38,7 @@ router.get('/:id', requireAuth, async (req, res) => {
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN inventory i ON p.id = i.product_id
         WHERE p.id = ?
-        GROUP BY p.id
+        GROUP BY p.id, c.name, c.color
     `, [req.params.id]);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
