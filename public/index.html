@@ -254,30 +254,42 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- JS Modules -->
-    <script src="js/utils.js?v=4"></script>
-    <script src="js/auth.js?v=4"></script>
-    <script src="js/dashboard.js?v=4"></script>
-    <script src="js/products.js?v=4"></script>
-    <script src="js/inventory.js?v=4"></script>
-    <script src="js/movements.js?v=4"></script>
-    <script src="js/storage.js?v=4"></script>
-    <script src="js/orders.js?v=4"></script>
-    <script src="js/reports.js?v=4"></script>
-    <script src="js/users.js?v=4"></script>
-    <script src="js/notifications.js?v=4"></script>
-    <script src="js/stockMaster.js?v=4"></script>
-    <script src="js/procurement.js?v=4"></script>
-    <script src="js/grn.js?v=4"></script>
-    <script src="js/transfers.js?v=4"></script>
-    <script src="js/picking.js?v=4"></script>
-    <script src="js/analytics.js?v=4"></script>
-    <script src="js/app.js?v=4"></script>
+    <script src="js/utils.js?v=5"></script>
+    <script src="js/auth.js?v=5"></script>
+    <script src="js/dashboard.js?v=5"></script>
+    <script src="js/products.js?v=5"></script>
+    <script src="js/inventory.js?v=5"></script>
+    <script src="js/movements.js?v=5"></script>
+    <script src="js/storage.js?v=5"></script>
+    <script src="js/orders.js?v=5"></script>
+    <script src="js/reports.js?v=5"></script>
+    <script src="js/users.js?v=5"></script>
+    <script src="js/notifications.js?v=5"></script>
+    <script src="js/stockMaster.js?v=5"></script>
+    <script src="js/procurement.js?v=5"></script>
+    <script src="js/grn.js?v=5"></script>
+    <script src="js/transfers.js?v=5"></script>
+    <script src="js/picking.js?v=5"></script>
+    <script src="js/analytics.js?v=5"></script>
+    <script src="js/app.js?v=5"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW Registered'))
+                    .then(reg => {
+                        console.log('SW Registered');
+                        // Check for updates periodically
+                        setInterval(() => reg.update(), 1000 * 60 * 60); // Check every hour
+                    })
                     .catch(err => console.log('SW Registration Failed', err));
+            });
+
+            // Reload the page when a new service worker takes control
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
             });
         }
     </script>
