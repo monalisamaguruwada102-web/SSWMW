@@ -269,6 +269,16 @@ async function createSchema() {
     `;
 
     await pool.query(schema);
+
+    // Schema Migrations for existing tables
+    try {
+        await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS max_stock_level INTEGER');
+        await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS reorder_level INTEGER');
+        await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS danger_level INTEGER');
+        await pool.query('ALTER TABLE storage_locations ADD COLUMN IF NOT EXISTS warehouse_id INTEGER REFERENCES warehouses(id) ON DELETE CASCADE');
+    } catch (e) {
+        console.warn('Migration warnings (probably columns already exist):', e.message);
+    }
 }
 
 module.exports = { getDb, runQuery, getAll, getOne, runInsert };
